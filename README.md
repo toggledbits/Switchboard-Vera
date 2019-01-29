@@ -1,7 +1,7 @@
 # Switchboard -- Re-imagined Virtual Switches for Vera Home Automation
 
-This plugin is my take on a modernized Virtual Switch plugin for Vera. The long-lived *Virtual Switch* plugin
-has some subtle issues that make it difficult to use with some third party applications (including Google Home and Amazon Echo devices).
+This plugin is my take on a modernized *Virtual Switch* plugin for Vera. The long-lived (near zombie) Virtual Switch plugin
+has some subtle issues that make it difficult to use with some third party applications (including Google Home and Amazon Echo devices), and even Vera's own native mobile app for Android.
 Hopefully, this version of virtual switches will address those shortcomings.
 
 NOTE: This plugin does not yet support openLuup. The things that make it work better on Vera than VSwitch are the things that are troubling to openLuup. I will make an effort to reconcile these at some point, but for the moment, this plugin is only supported on Vera UI7 and higher.
@@ -38,11 +38,11 @@ Switchboard's virtual switches use entirely Vera-native device types and service
 
 Switchboard's virtual switches can be hidden using the "command and control" interface in the "Status" tab of the Switchboard control panel. Here you will see all of your virtual switches in one place, and be able to control them all, and set options.
 
-Currently, there are only two options: visibility, and self-reset. The visibility option allows you to hide virtual switches, so if you have a large number of them, you can easily get them off your UI7 device list without having to tuck them into a virtual room, etc. The self-reset option creates an "impulse" switch--a switch that provides an "on" pulse and then automatically turns itself off. You can control the length of the pulse for each switch independently; a pulse length of zero means the switch doesn't use pulse timing.
+Currently, there are only two options: visibility, and self-reset. The visibility option allows you to hide virtual switches, so if you have a large number of them, you can easily get them off your UI7 device list without having to tuck them into a virtual room, etc. The self-reset option creates an "pulse" switch--a switch that provides an "on" pulse and then automatically turns itself off. You can control the length of the pulse for each switch independently; a pulse length of zero means the switch doesn't use pulse timing.
 
 NOTE: Turning "on" a pulse switch that is already on does not extend pulse timing.
 
-NOTE: When a switch is hidden, it will also not be visible in Vera's scene trigger menus and other places in the UI, so if you're trying to create a new scene using a hidden virtual switch, you will first need to go into the Switchboard status panel and un-hide the switch. You can re-hide it after; that doesn't affect the scene's ability to use the switch.
+NOTE: When a switch is hidden, it will also not be visible in Vera's scene trigger menus and other places in the UI, so if you're trying to create a new scene using a hidden virtual switch, you will first need to go into the Switchboard status panel and un-hide the switch. You can re-hide it after; that doesn't affect the scene's ability to *use* the switch.
 
 ## Legacy Virtual Switch Features
 
