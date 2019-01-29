@@ -30,6 +30,8 @@ To create virtual switches, go into the "Switchboard" device control panel, and 
 
 Once the new device has been created and Switchboard reports the number of devices now running, do a hard-refresh of your browser as described in the last install step above.
 
+**NOTE:** Do not create additional instances of the Switchboard master device. The system should have one and only one Switchboard device. Virtual switches are created only from the Switchboard control panel buttons as described above.
+
 ## Virtual Switch Features
 
 Switchboard's virtual switches use entirely Vera-native device types and service definitions, and this is what makes them work better than the old Virtual Switch devices (which had a custom device type that Vera really didn't recognize everywhere). To maintain compatibility with the older Virtual Switch switches, however, Switchboard's switches implement the services and behaviors of the older plugin, in addition to the standard Vera binary switch behaviors.
