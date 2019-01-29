@@ -24,6 +24,9 @@ local SWITCHSID = "urn:upnp-org:serviceId:SwitchPower1"
 local VSSID = "urn:upnp-org:serviceId:VSwitch1"
 local HADSID = "urn:micasaverde-com:serviceId:HaDevice1"
 
+local DEV_MFG = "rigpapa"
+local DEV_MODEL = "Switchboard Virtual Binary Switch"
+
 local pluginDevice
 local isALTUI = false
 local isOpenLuup = false
@@ -257,6 +260,9 @@ local function initSwitch( switch )
         luup.attr_set('category_num', "3", switch)
         luup.attr_set('subcategory_num', "0", switch)
     end
+    
+    luup.attr_set( 'manufacturer', DEV_MFG, switch )
+    luup.attr_set( 'model', DEV_MODEL, switch )
     
     setVar( MYSID, "Version", _CONFIGVERSION, switch )
 end
