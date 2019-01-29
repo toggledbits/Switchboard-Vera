@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!-- S_Switchboard1.xml -->
+<scpd xmlns="urn:schemas-upnp-org:service-1-0">
+    <specVersion>
+        <major>1</major>
+        <minor>0</minor>
+    </specVersion>
+    <serviceStateTable>
+        <stateVariable sendEvents="no">
+            <name>DebugMode</name>
+            <dataType>boolean</dataType>
+            <defaultValue>0</defaultValue>
+        </stateVariable>
+        <stateVariable sendEvents="no">
+            <name>A_ARG_TYPE_count</name>
+            <dataType>i4</dataType>
+            <defaultValue>1</defaultValue>
+        </stateVariable>
+        <stateVariable sendEvents="no">
+            <name>A_ARG_TYPE_boolean</name>
+            <dataType>boolean</dataType>
+        </stateVariable>
+        <stateVariable sendEvents="no">
+            <name>A_ARG_TYPE_ui4</name>
+            <dataType>ui4</dataType>
+        </stateVariable>
+        <stateVariable sendEvents="no">
+            <name>A_ARG_TYPE_string</name>
+            <dataType>string</dataType>
+        </stateVariable>
+    </serviceStateTable>
+    <actionList>
+        <action>
+            <name>AddSwitch</name>
+            <argumentList>
+                <name>Count</name>
+                <direction>in</direction>
+                <relatedStateVariable>A_ARG_TYPE_count</relatedStateVariable>
+            </argumentList>
+        </action>
+        <action>
+            <name>SetSwitchVisibility</name>
+            <argumentList>
+                <argument>
+                    <name>DeviceNum</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_ui4</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>Visibility</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_boolean</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+        <action>
+            <name>SetSwitchName</name>
+            <argumentList>
+                <argument>
+                    <name>DeviceNum</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_ui4</relatedStateVariable>
+                </argument>
+                <argument>
+                    <name>NewName</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>A_ARG_TYPE_string</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+        <action>
+            <name>SetDebug</name>
+            <argumentList>
+                <argument>
+                    <name>debug</name>
+                    <direction>in</direction>
+                    <relatedStateVariable>DebugMode</relatedStateVariable>
+                </argument>
+            </argumentList>
+        </action>
+        <action>
+            <name>MasterClear</name>
+            <argumentList/>
+        </action>
+    </actionList>
+</scpd>

@@ -1,0 +1,159 @@
+{
+	"__comment": [
+		"D_Switchboard1_UI7.json",
+		"Copyright (c) 2019 Patrick H. Rigney, All Rights Reserved"
+	],
+	"default_icon": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-on.png",
+	"state_icons": [],
+	"x": 2,
+	"y": 4,
+	"inScene": 1,
+	"Tabs": [{
+			"Label": {
+				"lang_tag": "tabname_control",
+				"text": "Control"
+			},
+			"Position": 0,
+			"TabType": "flash",
+			"TopNavigationTab": 1,
+			"ControlGroup": [{
+					"id": 1,
+					"scenegroup": 1
+				},
+				{
+					"id": 2,
+					"scenegroup": 2
+				}
+			],
+			"SceneGroup": [{
+					"id": 1,
+					"top": 0,
+					"left": 0,
+					"x": 1,
+					"y": 4
+				},
+				{
+					"id": 2,
+					"top": 1,
+					"left": 0,
+					"x": 1,
+					"y": 3
+				}
+			],
+			"Control": [{
+					"ControlGroup": 1,
+					"ControlType": "variable",
+					"top": 1,
+					"left": 0,
+					"Display": {
+						"Top": 0,
+						"Left": 0,
+						"Width": 320,
+						"Height": 24,
+						"Service": "urn:toggledbits-com:serviceId:Switchboard1",
+						"Variable": "Message"
+					},
+					"ControlCode": "message"
+				},
+				{
+					"ControlType": "button",
+					"top": "2",
+					"left": "0",
+					"Label": {
+						"lang_tag": "cmd_switchboard_add1",
+						"text": "Add One"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 0,
+						"Width": 120,
+						"Height": 40
+					},
+					"Command": {
+						"Service": "urn:toggledbits-com:serviceId:Switchboard1",
+						"Action": "AddSwitch",
+						"Parameters": [{
+							"Name": "Count",
+							"Value": "1"
+						}]
+					},
+					"ControlCode": "sb_add1"
+				},
+				{
+					"ControlType": "button",
+					"top": "2",
+					"left": "2",
+					"Label": {
+						"lang_tag": "cmd_switchboard_add5",
+						"text": "Add Five"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 140,
+						"Width": 120,
+						"Height": 40
+					},
+					"Command": {
+						"Service": "urn:toggledbits-com:serviceId:Switchboard1",
+						"Action": "AddSwitch",
+						"Parameters": [{
+							"Name": "Count",
+							"Value": "5"
+						}]
+					},
+					"ControlCode": "sb_add5"
+				},
+				{
+					"ControlType": "label",
+					"Display": {
+						"Top": 210,
+						"Left": 0,
+						"Width": 320,
+						"Height": 24
+					},
+					"Label": {
+						"lang_tag": "tb_begging",
+						"text": "<b>Please consider <a href=\"https://www.toggledbits.com/donate\" target=\"_blank\">making a donation</a> to support the ongoing development of this plugin.</b>"
+					}
+				},
+				{
+					"ControlType": "label",
+					"Display": {
+						"Top": 270,
+						"Left": 0,
+						"Width": 320,
+						"Height": 24
+					},
+					"Label": {
+						"lang_tag": "tb_switchboard_about",
+						"text": "Switchboard ver 1.0develop &#169; 2018 Patrick H. Rigney, All Rights Reserved.<br/><a href=\"http://forum.micasaverde.com/index.php/topic,118013.0.html\" target=\"_blank\">Support Forum Thread</a> &#149; <a href=\"https://github.com/toggledbits/Switchboard/\" target=\"_blank\">Documentation and license information</a>.<br>&nbsp;<br>Support links: <a href=\"/port_3480/data_request?id=lr_Switchboard&action=status\" target=\"_blank\">Plugin&nbsp;Status</a> &#149; <a href=\"/cgi-bin/cmh/log.sh?Device=LuaUPnP\" target=\"_blank\">Show&nbsp;Log</a>"
+					}
+				}
+			],
+			"Conditions": []
+		},
+		{
+			"Label": {
+				"lang_tag": "switchboard_tab_status",
+				"text": "Status"
+			},
+			"Position": 1,
+			"TopNavigationTab": 1,
+			"TabType": "javascript",
+			"ScriptName": "J_Switchboard1_UI7.js",
+			"Function": "Switchboard1_UI7.doStatusTab"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_advanced",
+				"text": "Advanced"
+			},
+			"Position": 2,
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		}
+	],
+	"eventList2": [],
+	"device_type": "urn:schemas-toggledbits-com:device:Switchboard:1"
+}
