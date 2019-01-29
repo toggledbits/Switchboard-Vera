@@ -15,9 +15,9 @@ This plugin has not yet been published to the Vera Plugin Marketplace, so you wi
 3. Upload the folder contents to your Vera using the uploader at *Apps > Develop apps > Luup files*. You should turn *off* the "Restart Luup after Upload" checkbox until the last file, and then turn it back on. If you forget, no worries, just turn it on and re-upload the last file.
 4. Wait for Luup to reload (about 60-120 seconds depending on your Vera and system load).
 5. Go to *Apps > Develop apps > Create device* and supply the following fields (leave the rest blank). Copy-paste is recommended, as accuracy in spelling and capitalization is vital to the success of this step:
-  * Description: `Switchboard`
-  * Upnp Device Filename: `D_Switchboard1.xml`
-  * Upnp Implementation Filename: `I_Switchboard.xml`
+   * Description: `Switchboard`
+   * Upnp Device Filename: `D_Switchboard1.xml`
+   * Upnp Implementation Filename: `I_Switchboard.xml`
 6. Press the "Create device" button.
 6. Go to the "Test Luup code (Lua)" item in *Apps > Develop apps*, and enter and run: `luup.reload()`
 6. While that's working, hard-refresh your browser (reload page with cache flush: CTRL-F5 on Chrome/Win, SHIFT-F5 on Firefox/Win, CMD+SHIFT+R on many Mac browsers I'm told).
