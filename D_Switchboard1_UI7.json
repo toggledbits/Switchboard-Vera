@@ -3,7 +3,7 @@
 		"D_Switchboard1_UI7.json",
 		"Copyright (c) 2019 Patrick H. Rigney, All Rights Reserved"
 	],
-	"default_icon": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-on.png",
+	"default_icon": "https://www.toggledbits.com/assets/switchboard/switchboard-default.png",
 	"state_icons": [],
 	"x": 2,
 	"y": 4,
