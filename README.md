@@ -17,7 +17,7 @@ This plugin has not yet been published to the Vera Plugin Marketplace, so you wi
 5. Go to *Apps > Develop apps > Create device* and supply the following fields (leave the rest blank). Copy-paste is recommended, as accuracy in spelling and capitalization is vital to the success of this step:
    * Description: `Switchboard`
    * Upnp Device Filename: `D_Switchboard1.xml`
-   * Upnp Implementation Filename: `I_Switchboard.xml`
+   * Upnp Implementation Filename: `I_Switchboard1.xml`
 6. Press the "Create device" button.
 6. Go to the "Test Luup code (Lua)" item in *Apps > Develop apps*, and enter and run: `luup.reload()`
 6. While that's working, hard-refresh your browser (reload page with cache flush: CTRL-F5 on Chrome/Win, SHIFT-F5 on Firefox/Win, CMD+SHIFT+R on many Mac browsers I'm told).
@@ -36,7 +36,9 @@ Switchboard's virtual switches use entirely Vera-native device types and service
 
 Switchboard's virtual switches can be hidden using the "command and control" interface in the "Status" tab of the Switchboard control panel. Here you will see all of your virtual switches in one place, and be able to control them all, and set options.
 
-Currently, there are only two options: visibility, and self-reset. The visibility option allows you to hide virtual switches, so if you have a large number of them, you can easily get them off your UI without having to tuck them into a virtual room, etc. The self-reset option creates an "impulse" switch--a switch that provides an "on" pulse and then turns itself off. You can control the length of the pulse for each switch; a pulse length of zero means the switch doesn't use pulse timing.
+Currently, there are only two options: visibility, and self-reset. The visibility option allows you to hide virtual switches, so if you have a large number of them, you can easily get them off your UI7 device list without having to tuck them into a virtual room, etc. The self-reset option creates an "impulse" switch--a switch that provides an "on" pulse and then automatically turns itself off. You can control the length of the pulse for each switch independently; a pulse length of zero means the switch doesn't use pulse timing.
+
+NOTE: Turning "on" a pulse switch that is already on does not extend pulse timing.
 
 The old Virtual Switch plugin supported two text fields for each switch. These have made their way into Switchboard's switches as well, for compatibility. However, because the Vera-native UI is used for Switchboard's virtual switches, there is no way to display them--they can used for storage only.
 
