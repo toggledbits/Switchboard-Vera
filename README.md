@@ -1,5 +1,6 @@
 # Switchboard -- Re-imagined Virtual Switches for Vera Home Automation
 
+![Switchboard](https://www.toggledbits.com/assets/switchboard/switchboard-default.png) 
 This plugin is my take on a modernized *Virtual Switch* plugin for Vera. The long-lived (near zombie) Virtual Switch plugin
 has some subtle issues that make it difficult to use with some third party applications (including Google Home and Amazon Echo devices), and even Vera's own native mobile app for Android.
 Hopefully, this version of virtual switches will address those shortcomings.
