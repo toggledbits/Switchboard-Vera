@@ -48,7 +48,7 @@ NOTE: When a switch is hidden, it will also not be visible in Vera's scene trigg
 
 To maintain compatibility with the older Virtual Switch plugin's switches, Switchboard's switches implement the services and behaviors of the older plugin, in addition to the standard Vera binary switch behaviors.
 
-The old Virtual Switch plugin supported two text fields for each switch. These have made their way into Switchboard's switches as well, for compatibility. However, because the Vera-native UI is used for Switchboard's virtual switches, there is no way to display them--they can used for storage only.
+The old Virtual Switch plugin supported two text fields for each switch. These have made their way into Switchboard's switches as well, for compatibility. However, because the Vera-native UI is used for Switchboard's virtual switches, there is no way to display them in the native Vera switch UI. They are visible and editable in the Switchboard "Status" tab, however.
 
 ## License and Warranty
 
