@@ -7,7 +7,7 @@ Hopefully, this version of virtual switches will address those shortcomings.
 
 NOTE: This plugin does not yet support openLuup. The things that make it work better on Vera than VSwitch are the things that are troubling to openLuup. I will make an effort to reconcile these at some point, but for the moment, this plugin is only supported on Vera UI7 and higher.
 
-## Installing
+## Installing on Vera
 
 This plugin has not yet been published to the Vera Plugin Marketplace, so you will have to install it "the hard way."
 
@@ -24,6 +24,17 @@ This plugin has not yet been published to the Vera Plugin Marketplace, so you wi
 6. While that's working, hard-refresh your browser (reload page with cache flush: CTRL-F5 on Chrome/Win, SHIFT-F5 on Firefox/Win, CMD+SHIFT+R on many Mac browsers I'm told).
 
 After Luup reloads and your Vera UI has reloaded, you should see the "Switchboard" device in your devices list.
+
+## Installing on openLuup
+
+**NOTE:** Version 2018.11.21 of openLuup, or higher, is required to run Switchboard.
+
+Installation of Switchboard is best done from the AltAppStore.
+
+Because openLuup does not include a core set of device and service files that Vera provides, after installing Switchboard, you must also install the necessary device files manually. This is pretty easy:
+
+1. Download the files from the "openLuup" subdirectory in the Github repository.
+2. Copy the files to your openLuup installation, into the same directory as that into which Switchboard has been installed (e.g. the directory containing the D_Switchboard1.xml file).
 
 ## Creating Virtual Switches
 

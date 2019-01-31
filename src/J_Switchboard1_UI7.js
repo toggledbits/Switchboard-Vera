@@ -22,7 +22,7 @@ var Switchboard1_UI7 = (function(api, $) {
 
     var inStatusPanel = false;
     // var isOpenLuup = false;
-    // unused: isALTUI = undefined !== MultiBox;
+    var isALTUI = ( "undefined" !== typeof(MultiBox) );
 
     /* Closing the control panel. */
     function onBeforeCpanelClose(args) {
@@ -41,7 +41,6 @@ var Switchboard1_UI7 = (function(api, $) {
 
         /* Load material design icons */
         jQuery("head").append('<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">');
-
     }
 
     function getDevices(pdev) {
@@ -61,12 +60,13 @@ var Switchboard1_UI7 = (function(api, $) {
         });
         return dd;
     }
-
+    
     function handleStateClick( ev ) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
         var dev = parseInt( row.attr( 'id' ) );
-        if ( api.getDeviceProperty( dev, "model" ) == "Switchboard Virtual Tri-state Switch" ) {
+        /* ??? Current AltUI has bugs in getDeviceProperty(), and missing implementation, so there's no workaround. */
+        if ( !isALTUI && api.getDeviceProperty( dev, "model" ) == "Switchboard Virtual Tri-state Switch" ) {
             var st = api.getDeviceState( dev, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "2";
             st = ( parseInt( st ) + 1 ) % 3;
             api.performActionOnDevice( dev, "urn:upnp-org:serviceId:SwitchPower1", "SetTarget", { actionArguments: { newTargetValue: String(st) } } );
@@ -219,28 +219,33 @@ var Switchboard1_UI7 = (function(api, $) {
     {
         console.log("doStatusPanel()");
 
-        initModule();
+        try {
+            initModule();
 
-        /* Our styles. */
-        var html = "<style>";
-        html += 'div#switchboardstatus {}';
-        html += 'div#switchboardstatus div.row { min-height: 40px; margin-top: 4px; margin-bottom: 4px; border-bottom: 1px dotted #006040; }';
-        html += 'div#switchboardstatus div.vsname { font-size: 16px; }';
-        html += 'div#switchboardstatus i.md-btn { margin-right: 4px; }';
-        html += 'div#switchboardstatus i.vstext.md-btn { font-size: 18px; }';
-        html += 'div#switchboardstatus div.headrow { color: white; font-size: 16px; font-weight: bold; line-height: 40px; background-color: #00a652; }';
-        html += 'div#switchboardstatus div.colhead { }';
-        html += "</style>";
-        jQuery("head").append( html );
+            /* Our styles. */
+            var html = "<style>";
+            html += 'div#switchboardstatus {}';
+            html += 'div#switchboardstatus div.row { min-height: 40px; margin-top: 4px; margin-bottom: 4px; border-bottom: 1px dotted #006040; }';
+            html += 'div#switchboardstatus div.vsname { font-size: 16px; }';
+            html += 'div#switchboardstatus i.md-btn { margin-right: 4px; }';
+            html += 'div#switchboardstatus i.vstext.md-btn { font-size: 18px; }';
+            html += 'div#switchboardstatus div.headrow { color: white; font-size: 16px; font-weight: bold; line-height: 40px; background-color: #00a652; }';
+            html += 'div#switchboardstatus div.colhead { }';
+            html += "</style>";
+            jQuery("head").append( html );
 
-        html = '<div id="switchboardstatus" class="switchboardtab"></div>';
-        html += footer();
-        api.setCpanelContent( html );
+            html = '<div id="switchboardstatus" class="switchboardtab"></div>';
+            html += footer();
+            api.setCpanelContent( html );
 
-        api.registerEventHandler('on_ui_deviceStatusChanged', Switchboard1_UI7, 'onUIDeviceStatusChanged');
-        inStatusPanel = true; /* Tell the event handler it's OK */
+            api.registerEventHandler('on_ui_deviceStatusChanged', Switchboard1_UI7, 'onUIDeviceStatusChanged');
+            inStatusPanel = true; /* Tell the event handler it's OK */
 
-        updateStatus( api.getCpanelDeviceId() );
+            updateStatus( api.getCpanelDeviceId() );
+        }
+        catch( e ) {
+            alert( String(e) + "\n" + e.stack );
+        }
     }
 
 

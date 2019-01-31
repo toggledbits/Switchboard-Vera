@@ -259,6 +259,12 @@ local function initSwitch( switch )
         
         luup.attr_set('category_num', "3", switch)
         luup.attr_set('subcategory_num', "0", switch)
+        
+        luup.attr_set( 'manufacturer', DEV_MFG, switch )
+        luup.attr_set( 'model', DEV_MODEL, switch )
+        
+        luup.variable_set( MYSID, "Version", _CONFIGVERSION, switch )
+        return
     end
     
     if s < 000002 then
@@ -457,20 +463,11 @@ function startPlugin( pdev )
         if v.device_type == "urn:schemas-upnp-org:device:altui:1" and v.device_num_parent == 0 then
             D("start() detected ALTUI at %1", k)
             isALTUI = true
-            --[[
-            local rc,rs,jj,ra = luup.call_action("urn:upnp-org:serviceId:altui1", "RegisterPlugin",
-                {
-                    newDeviceType=MYTYPE,
-                    newScriptFile="",
-                    newDeviceDrawFunc="",
-                    newStyleFunc=""
-                }, k )
-            D("startSensor() ALTUI's RegisterPlugin action for %5 returned resultCode=%1, resultString=%2, job=%3, returnArguments=%4", rc,rs,jj,ra, MYTYPE)
-            --]]
         elseif v.device_type == "openLuup" then
             D("start() detected openLuup")
             isOpenLuup = true
         end
+        if isALTUI and isOpenLuup then break end -- nothing more to do.
     end
 
     -- Check UI version
@@ -486,6 +483,23 @@ function startPlugin( pdev )
     plugin_runOnce( pdev )
 
     -- More inits
+    if isOpenLuup then
+        local loader = require "openLuup.loader"
+        if loader.find_file == nil then 
+            gatewayStatus( "openLuup upgrade required; must be 2018.11.21 or higher", pdev )
+            L{level=1,msg="Your openLuup needs to be 2018.11.21 or higher; please update."}
+            luup.set_failure( 1, pdev )
+            return false, "Please update to 2018.11.21 or higher.", _PLUGIN_NAME
+        end
+        if not ( loader.find_file( "D_BinaryLight1.xml" ) and 
+                load.find_file( "D_BinaryLight1.json" ) 
+                ) then
+            gatewayStatus( "Incomplete installation; see log for details", pdev )
+            L{level=1,msg="You have not completed the install of the supplemental files for openLuup. Please see the README file at https://github.com/toggledbits/Switchboard-Vera/blob/master/README.md"}
+            luup.set_failure( 1, pdev )
+            return false, "Incomplete installation; see log for details", _PLUGIN_NAME
+        end
+    end
 
     -- Start switches
     local count = startSwitches( pdev )
