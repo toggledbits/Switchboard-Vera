@@ -1,0 +1,263 @@
+{
+    "_comment": "D_TriStateSwitch.json",
+	"default_icon": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-off.png",
+	"state_icons": [
+		{
+			"img": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-off.png",
+			"conditions": [
+				{
+					"service": "urn:upnp-org:serviceId:SwitchPower1",
+					"variable": "Status",
+					"operator": "==",
+					"value": 0
+				}
+			]
+		},
+		{
+			"img": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-on.png",
+			"conditions": [
+				{
+					"service": "urn:upnp-org:serviceId:SwitchPower1",
+					"variable": "Status",
+					"operator": "==",
+					"value": 1
+				}
+			]
+		},
+		{
+			"img": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-x.png",
+			"conditions": [
+				{
+					"service": "urn:upnp-org:serviceId:SwitchPower1",
+					"variable": "Status",
+					"operator": "==",
+					"value": 2
+				}
+			]
+		}
+	],
+	"x": "2",
+	"y": "4",
+	"inScene": "1",
+	"ToggleButton": 1,
+	"Tabs": [
+		{
+			"Label": {
+				"lang_tag": "ui7_tabname_control",
+				"text": "Control"
+			},
+			"Position": "0",
+			"TabType": "flash",
+			"top_navigation_tab": 1,
+			"ControlGroup": [
+				{
+					"id": "1",
+					"isSingle": "1",
+					"scenegroup": "1"
+				}
+			],
+			"SceneGroup": [
+				{
+					"id": "1",
+					"top": "2",
+					"left": "0",
+					"x": "2",
+					"y": "1"
+				}
+			],
+			"Control": [{
+					"ControlGroup": "1",
+					"ControlType": "button",
+					"top": "2",
+					"left": "0",
+					"Label": {
+						"lang_tag": "cmd_tristate_on",
+						"text": "On"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 0,
+						"Width": 60,
+						"Height": 40,
+                        "Service": "urn:upnp-org:serviceId:SwitchPower1",
+                        "Variable": "Target",
+                        "Value": "1"
+					},
+					"Command": {
+						"Service": "urn:upnp-org:serviceId:SwitchPower1",
+						"Action": "SetTarget",
+						"Parameters": [{
+							"Name": "newTargetValue",
+							"Value": "1"
+						}]
+					},
+					"ControlCode": "sb_3state_on"
+				},
+				{
+					"ControlGroup": "1",
+					"ControlType": "button",
+					"top": "2",
+					"left": "2",
+					"Label": {
+						"lang_tag": "cmd_tristate_off",
+						"text": "Off"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 70,
+						"Width": 60,
+						"Height": 40,
+                        "Service": "urn:upnp-org:serviceId:SwitchPower1",
+                        "Variable": "Target",
+                        "Value": "0"
+					},
+					"Command": {
+						"Service": "urn:upnp-org:serviceId:SwitchPower1",
+						"Action": "SetTarget",
+						"Parameters": [{
+							"Name": "newTargetValue",
+							"Value": "0"
+						}]
+					},
+					"ControlCode": "sb_3state_off"
+				},
+				{
+					"ControlGroup": "1",
+					"ControlType": "button",
+					"top": "2",
+					"left": "2",
+					"Label": {
+						"lang_tag": "cmd_tristate_void",
+						"text": "Void"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 140,
+						"Width": 60,
+						"Height": 40,
+                        "Service": "urn:upnp-org:serviceId:SwitchPower1",
+                        "Variable": "Status",
+                        "Value": "2"
+					},
+					"Command": {
+						"Service": "urn:upnp-org:serviceId:SwitchPower1",
+						"Action": "SetTarget",
+						"Parameters": [{
+							"Name": "newTargetValue",
+							"Value": "2"
+						}]
+					},
+					"ControlCode": "sb_3state_void"
+				}
+			]
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_settings",
+				"text": "Settings"
+			},
+			"Position": "1",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "simple_device"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_advanced",
+				"text": "Advanced"
+			},
+			"Position": "2",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_device_options",
+				"text": "Device Options"
+			},
+			"Position": "3",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_zwave_options"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_logs",
+				"text": "Logs"
+			},
+			"Position": "4",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_logs"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_notifications",
+				"text": "Notifications"
+			},
+			"Position": "5",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_notifications"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_device_scenes",
+				"text": "Scenes"
+			},
+			"Position": "6",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_scenes"
+		}
+	],
+	"eventList2": [
+		{
+			"id": 1,
+			"label": {
+				"lang_tag": "tb_3state_status_changes",
+				"text": "Status changes"
+			},
+			"serviceId": "urn:upnp-org:serviceId:SwitchPower1",
+			"argumentList": [
+				{
+					"id": 1,
+					"dataType": "boolean",
+					"defaultValue": "1",
+					"allowedValueList": [
+						{
+							"Off": "0",
+							"HumanFriendlyText": {
+								"lang_tag": "tb_switch_status_off",
+								"text": "_DEVICE_NAME_ is turned OFF"
+							}
+						},
+						{
+							"On": "1",
+							"HumanFriendlyText": {
+								"lang_tag": "tb_switch_status_on",
+								"text": "_DEVICE_NAME_ is turned ON"
+							}
+						},
+						{
+							"Void": "2",
+							"HumanFriendlyText": {
+								"lang_tag": "tb_switch_status_void",
+								"text": "_DEVICE_NAME_ becomes void"
+							}
+						}
+					],
+					"name": "Status",
+					"comparisson": "=",
+					"prefix": {
+						"lang_tag": "tb_whenever",
+						"text": "Whenever"
+					},
+					"suffix": {}
+				}
+			]
+		}
+	],
+	"device_type": "urn:schemas-upnp-org:device:BinaryLight:1"
+}

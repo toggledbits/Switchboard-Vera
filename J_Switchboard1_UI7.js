@@ -66,7 +66,13 @@ var Switchboard1_UI7 = (function(api, $) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
         var dev = parseInt( row.attr( 'id' ) );
-        api.performActionOnDevice( dev, "urn:micasaverde-com:serviceId:HaDevice1", "ToggleState", { actionArguments: {} });
+        if ( api.getDeviceProperty( dev, "model" ) == "Switchboard Virtual Tri-state Switch" ) {
+            var st = api.getDeviceState( dev, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "2";
+            st = ( parseInt( st ) + 1 ) % 3;
+            api.performActionOnDevice( dev, "urn:upnp-org:serviceId:SwitchPower1", "SetTarget", { actionArguments: { newTargetValue: String(st) } } );
+        } else {
+            api.performActionOnDevice( dev, "urn:micasaverde-com:serviceId:HaDevice1", "ToggleState", { actionArguments: {} });
+        }
     }
 
     function handleIconClick( ev ) {
@@ -78,8 +84,11 @@ var Switchboard1_UI7 = (function(api, $) {
         switch ( act ) {
             case 'visibility':
                 var vis = el.text() == "visibility";
+                api.setDeviceProperty( dev, 'invisible', vis ? 1 : 0, { persistent: true } );
+                /*
                 var devobj = api.getDeviceObject( dev );
                 api.performActionOnDevice( devobj.id_parent, serviceId, "SetSwitchVisibility", { actionArguments: { DeviceNum: dev, Visibility: vis ? "0" : "1" } });
+                */
                 el.text( vis ? "visibility_off" : "visibility" );
                 break;
 
@@ -125,7 +134,10 @@ var Switchboard1_UI7 = (function(api, $) {
             txt = prompt( 'Enter new switch name:', txt );
             if ( txt == null ) break;
             if ( txt.match( /^.+$/ ) ) {
+                api.setDeviceProperty( dev, 'name', txt, { persistent: true } );
+                /*
                 api.performActionOnDevice( devobj.id_parent, serviceId, "SetSwitchName", { actionArguments: { DeviceNum: dev, NewName: txt } });
+                */
                 el.text( txt );
                 break;
             }
@@ -149,7 +161,7 @@ var Switchboard1_UI7 = (function(api, $) {
             var el = jQuery( '<div class="col-xs-1 col-md-1 text-right" />' );
             var st = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "0";
             el.append( jQuery( '<img id="state" src="https://www.toggledbits.com/assets/switchboard/switchboard-switch-' +
-                ( st == "0" ? "off" : "on" ) + '.png" width="32" height="32" alt="switch state">' )
+                ( {"0":"off","1":"on","2":"x"}[st] || "x" ) + '.png" width="32" height="32" alt="switch state">' )
                 .attr( 'title', 'Click to toggle state' )
             );
             row.append( el );

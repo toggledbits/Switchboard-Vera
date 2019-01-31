@@ -9,11 +9,11 @@ module("L_Switchboard1", package.seeall)
 
 local debugMode = true
 
-local _PLUGIN_ID = 99999
+local _PLUGIN_ID = 9194
 local _PLUGIN_NAME = "Switchboard"
 local _PLUGIN_VERSION = "1.0develop"
 local _PLUGIN_URL = "https://www.toggledbits.com/"
-local _CONFIGVERSION = 000001
+local _CONFIGVERSION = 000002
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
@@ -98,7 +98,7 @@ end
 local function checkVersion(dev)
     local ui7Check = luup.variable_get(MYSID, "UI7Check", dev) or ""
     if isOpenLuup then
-        return false, "openLuup is not yet supported"
+        return true
     end
     if luup.version_branch == 1 and luup.version_major == 7 then
         if ui7Check == "" then
@@ -261,8 +261,10 @@ local function initSwitch( switch )
         luup.attr_set('subcategory_num', "0", switch)
     end
     
-    luup.attr_set( 'manufacturer', DEV_MFG, switch )
-    luup.attr_set( 'model', DEV_MODEL, switch )
+    if s < 000002 then
+        luup.attr_set( 'manufacturer', DEV_MFG, switch )
+        luup.attr_set( 'model', DEV_MODEL, switch )
+    end
     
     setVar( MYSID, "Version", _CONFIGVERSION, switch )
 end
@@ -312,15 +314,24 @@ end
 function actionSetState( state, dev )
     assert(luup.devices[dev].device_type == CHILDTYPE)
     -- Switch on/off
-    if type(state) == "string" then state = ( tonumber(state) or 0 ) ~= 0
-    elseif type(state) == "number" then state = state ~= 0 end
-    local invert = getVarNumeric( "ReverseOnOff", 0, dev, HADSID) ~= 0
-    local status if invert then status = not state else status = state end
-    luup.variable_set( SWITCHSID, "Target", state and "1" or "0", dev )
-    luup.variable_set( VSSID, "Target", state and "1" or "0", dev )
-    local _,changed = setVar( SWITCHSID, "Status", status and "1" or "0", dev )
-    setVar( VSSID, "Status", status and "1" or "0", dev )
-    if not status then
+    local status
+    if state == "2" and true then -- tri-state
+        status = "2"
+    else
+        if type(state) == "string" then state = ( tonumber(state) or 0 ) ~= 0
+        elseif type(state) == "number" then state = state ~= 0 end
+        local invert = getVarNumeric( "ReverseOnOff", 0, dev, HADSID) ~= 0
+        if invert then status = not state else status = state end
+        state = state and "1" or "0"
+        status = status and "1" or "0"
+    end
+    
+    luup.variable_set( SWITCHSID, "Target", state, dev )
+    luup.variable_set( VSSID, "Target", state, dev )
+    local _,changed = setVar( SWITCHSID, "Status", status, dev )
+    setVar( VSSID, "Status", status, dev )
+    
+    if status == "0" or status == "X" then
         D("actionSetState() clearing impulse task")
         scheduleTick( "impulse"..dev, 0 )
         setVar( MYSID, "ImpulseResetTime", "0", dev )

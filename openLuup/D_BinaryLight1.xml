@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!-- D_BinaryLight1.xml, UPnP standard version 1.0 -->
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+	<specVersion>
+		<major>1</major>
+		<minor>0</minor>
+	</specVersion>
+	<device>
+		<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>
+		<friendlyName>Binary Light</friendlyName>
+		<manufacturer></manufacturer>
+		<manufacturerURL></manufacturerURL>
+		<modelDescription></modelDescription>
+		<modelName></modelName>
+		<modelNumber></modelNumber>
+		<modelURL></modelURL>
+		<iconList/>
+		<serviceList>
+			<service>
+				<serviceType>urn:schemas-upnp-org:service:SwitchPower:1</serviceType>
+				<serviceId>urn:upnp-org:serviceId:SwitchPower:1</serviceId>
+				<SCPDURL>S_SwitchPower1.xml</SCPDURL>
+			</service>
+		 </serviceList>
+	 </device>
+</root>
+			

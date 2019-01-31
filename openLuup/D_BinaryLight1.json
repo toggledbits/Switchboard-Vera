@@ -1,0 +1,223 @@
+{
+	"_comment": "D_BinaryLight1.json",
+	"default_icon": "https://www.toggledbits.com/assets/switchboard/switchboard-default.png",
+	"state_icons": [{
+			"img": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-off.png",
+			"conditions": [{
+				"service": "urn:upnp-org:serviceId:SwitchPower1",
+				"variable": "Status",
+				"operator": "==",
+				"value": "0"
+			}]
+		},
+		{
+			"img": "https://www.toggledbits.com/assets/switchboard/switchboard-switch-on.png",
+			"conditions": [{
+				"service": "urn:upnp-org:serviceId:SwitchPower1",
+				"variable": "Status",
+				"operator": "==",
+				"value": "1"
+			}]
+		}
+	],
+	"x": "2",
+	"y": "2",
+	"inScene": "1",
+	"ToggleButton": 1,
+	"Tabs": [{
+			"Label": {
+				"lang_tag": "tb_tab_control",
+				"text": "Control"
+			},
+			"Position": "0",
+			"TabType": "flash",
+			"TopNavigationTab": 1,
+			"ControlGroup": [{
+				"id": "1",
+				"isSingle": "1",
+				"scenegroup": "1"
+			}, {
+				"id": "2",
+				"isSingle": "1",
+				"scenegroup": "2"
+			}],
+			"SceneGroup": [{
+					"id": "1",
+					"top": "2",
+					"left": "0",
+					"x": "2",
+					"y": "2"
+				},
+				{
+					"id": "2",
+					"top": "2",
+					"left": "0",
+					"x": "2",
+					"y": "2"
+				}
+			],
+			"Control": [{
+					"ControlGroup": 1,
+					"ControlType": "variable",
+					"top": "1",
+					"left": "0",
+					"Display": {
+						"Service": "urn:upnp-org:serviceId:VSwitch1",
+						"Variable": "Text1",
+						"Top": 0,
+						"Left": 0,
+						"Width": 320,
+						"Height": 24
+					}
+				},
+				{
+					"ControlGroup": 1,
+					"ControlType": "variable",
+					"top": "1",
+					"left": "0",
+					"Display": {
+						"Service": "urn:upnp-org:serviceId:VSwitch1",
+						"Variable": "Text2",
+						"Top": 30,
+						"Left": 0,
+						"Width": 320,
+						"Height": 24
+					}
+				},
+				{
+					"ControlGroup": 2,
+					"ControlType": "multi_state_button",
+					"top": "0",
+					"left": "1",
+					"Display": {
+						"Top": 60,
+						"Left": 0,
+						"Width": 120,
+						"Height": 60
+					},
+					"states": [{
+							"ControlGroup": 2,
+							"Label": {
+								"lang_tag": "tb_switch_on",
+								"text": "On"
+							},
+							"Display": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Variable": "Status",
+								"Value": "1"
+							},
+							"Command": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Action": "SetTarget",
+								"Parameters": [{
+									"Name": "newTargetValue",
+									"Value": "1"
+								}]
+							},
+							"ControlCode": "tb_sw_on"
+						},
+						{
+							"ControlGroup": 2,
+							"Label": {
+								"lang_tag": "tb_switch_off",
+								"text": "Off"
+							},
+							"Display": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Variable": "Status",
+								"Value": "0"
+							},
+							"Command": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Action": "SetTarget",
+								"Parameters": [{
+									"Name": "newTargetValue",
+									"Value": "0"
+								}]
+							},
+							"ControlCode": "tb_sw_off"
+						}
+					],
+					"ControlCode": "tb_sw_multi_onoff"
+				}
+			]
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_advanced",
+				"text": "Advanced"
+			},
+			"Position": 1,
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_logs",
+				"text": "Logs"
+			},
+			"Position": 2,
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_logs"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_notifications",
+				"text": "Notifications"
+			},
+			"Position": 3,
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_notifications"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_device_scenes",
+				"text": "Scenes"
+			},
+			"Position": 4,
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_scenes"
+		}
+	],
+	"eventList2": [{
+		"id": 1,
+		"label": {
+			"lang_tag": "tb_event_on_off",
+			"text": "The switch is turned on or off"
+		},
+		"serviceId": "urn:upnp-org:serviceId:SwitchPower1",
+		"argumentList": [{
+			"id": 1,
+			"dataType": "boolean",
+			"defaultValue": "1",
+			"allowedValueList": [{
+					"Off": "0",
+					"HumanFriendlyText": {
+						"lang_tag": "tb_sw_turned_off",
+						"text": "_DEVICE_NAME_ is turned off"
+					}
+				},
+				{
+					"On": "1",
+					"HumanFriendlyText": {
+						"lang_tag": "tb_sw_on_on",
+						"text": "_DEVICE_NAME_ is turned on"
+					}
+				}
+			],
+			"name": "Status",
+			"comparisson": "=",
+			"prefix": {
+				"lang_tag": "tb_sw_status",
+				"text": "Status"
+			},
+			"suffix": {}
+		}]
+	}],
+	"DeviceType": "urn:schemas-upnp-org:device:BinaryLight:1",
+	"device_type": "urn:schemas-upnp-org:device:BinaryLight:1"
+}
