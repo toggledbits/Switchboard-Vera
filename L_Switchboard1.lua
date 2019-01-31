@@ -331,7 +331,7 @@ function actionSetState( state, dev )
     local _,changed = setVar( SWITCHSID, "Status", status, dev )
     setVar( VSSID, "Status", status, dev )
     
-    if status == "0" or status == "X" then
+    if status == "0" or status == "2" then
         D("actionSetState() clearing impulse task")
         scheduleTick( "impulse"..dev, 0 )
         setVar( MYSID, "ImpulseResetTime", "0", dev )
