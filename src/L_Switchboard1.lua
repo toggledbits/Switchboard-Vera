@@ -282,6 +282,7 @@ local function startSwitches( dev )
     D("startSwitches()")
     local switches = getChildDevices( CHILDTYPE, dev )
     for _,switch in ipairs( switches ) do
+        D("startSwitches() starting switch %1 (%2)", luup.devices[switch].description, switch)
         initSwitch( switch )
         
         -- If switch had a pending impulse reset before restart, reschedule it.
