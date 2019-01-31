@@ -29,12 +29,7 @@ After Luup reloads and your Vera UI has reloaded, you should see the "Switchboar
 
 **NOTE:** Version 2018.11.21 of openLuup, or higher, is required to run Switchboard.
 
-Installation of Switchboard is best done from the AltAppStore.
-
-Because openLuup does not include a core set of device and service files that Vera provides, after installing Switchboard, you must also install the necessary device files manually. This is pretty easy:
-
-1. Download the files from the "openLuup" subdirectory in the Github repository.
-2. Copy the files to your openLuup installation, into the same directory as that into which Switchboard has been installed (e.g. the directory containing the D_Switchboard1.xml file).
+Installation of Switchboard is best done from the AltAppStore. Find it. Click it. Done.
 
 ## Creating Virtual Switches
 
