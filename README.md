@@ -57,6 +57,10 @@ To maintain compatibility with the older Virtual Switch plugin's switches, Switc
 
 The old Virtual Switch plugin supported two text fields for each switch. These have made their way into Switchboard's switches as well, for compatibility. However, because the Vera-native UI is used for Switchboard's virtual switches, there is no way to display them in the native Vera switch UI. They are visible and editable in the Switchboard "Status" tab, however.
 
+## Distinguishing Switchboard Virtual Switches from Real Switches
+
+Sometimes it may be necessary to distinguish Switchboard's virtual switches from real switches (e.g. in a startup Lua routine). Device type cannot be used, and Switchboard tries to use Vera-standard devices types to the greatest extent possible. But there are some built-in "tells": all Switchboard child devices will have the manufacturer attribute set to "rigpapa", and the model attribute set to the switch type name. Currently, only two types are defined: "Switchboard Virtual Binary Switch" and "Switchboard Virtual Tri-state Switch".
+
 ## License and Warranty
 
 This software is provided "as-is" together with all defects, and no warranties, express or implied, are made, including but not
