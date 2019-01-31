@@ -492,7 +492,7 @@ function startPlugin( pdev )
             return false, "Please update to 2018.11.21 or higher.", _PLUGIN_NAME
         end
         if not ( loader.find_file( "D_BinaryLight1.xml" ) and 
-                load.find_file( "D_BinaryLight1.json" ) 
+                loader.find_file( "D_BinaryLight1.json" ) 
                 ) then
             gatewayStatus( "Incomplete installation; see log for details", pdev )
             L{level=1,msg="You have not completed the install of the supplemental files for openLuup. Please see the README file at https://github.com/toggledbits/Switchboard-Vera/blob/master/README.md"}
