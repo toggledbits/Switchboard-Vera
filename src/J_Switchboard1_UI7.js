@@ -65,8 +65,7 @@ var Switchboard1_UI7 = (function(api, $) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
         var dev = parseInt( row.attr( 'id' ) );
-        /* ??? Current AltUI has bugs in getDeviceProperty(), and missing implementation, so there's no workaround. */
-        if ( !isALTUI && api.getDeviceProperty( dev, "model" ) == "Switchboard Virtual Tri-state Switch" ) {
+        if ( api.getDeviceProperty( dev, "model" ) == "Switchboard Virtual Tri-state Switch" ) {
             var st = api.getDeviceState( dev, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "2";
             st = ( parseInt( st ) + 1 ) % 3;
             api.performActionOnDevice( dev, "urn:upnp-org:serviceId:SwitchPower1", "SetTarget", { actionArguments: { newTargetValue: String(st) } } );
