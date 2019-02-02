@@ -467,7 +467,14 @@ function startPlugin( pdev )
         elseif v.device_type == "openLuup" then
             D("start() detected openLuup")
             isOpenLuup = true
-        end
+            local vv = getVarNumeric( "Vnumber", 0, k, "openLuup" )
+            if vv < 190202 then
+                L({level=1,msg="OpenLuup must be >= 190202; you have %1. Can't continue."}, vv)
+                luup.variable_set( MYSID, "Message", "See log. Unsupported firmware " .. tostring(vv), pdev )
+                luup.set_failure( 1, pdev )
+                return false, "Incompatible openLuup ver " .. tostring(vv), _PLUGIN_NAME
+            end
+       end
         if isALTUI and isOpenLuup then break end -- nothing more to do.
     end
 
