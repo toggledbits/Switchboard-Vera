@@ -13,7 +13,7 @@ local _PLUGIN_ID = 9194
 local _PLUGIN_NAME = "Switchboard"
 local _PLUGIN_VERSION = "1.0develop"
 local _PLUGIN_URL = "https://www.toggledbits.com/"
-local _CONFIGVERSION = 000002
+local _CONFIGVERSION = 000003
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
@@ -125,15 +125,15 @@ local function initVar( name, dflt, dev, sid )
 end
 
 -- Set variable, only if value has changed.
-local function setVar( sid, name, val, dev )
+local function setVar( sid, name, val, dev, force )
     val = (val == nil) and "" or tostring(val)
     local s = luup.variable_get( sid, name, dev ) or ""
     -- D("setVar(%1,%2,%3,%4) old value %5", sid, name, val, dev, s )
-    if s ~= val then
+    if s ~= val or force then
         luup.variable_set( sid, name, val, dev )
-        return s, true
+        return true, s
     end
-    return s, false
+    return false, s
 end
 
 -- Get numeric variable, or return default value if not set or blank
@@ -242,36 +242,41 @@ end
 -- One-time init for switch
 local function initSwitch( switch )
     D("initSwitch(%1)", switch)
-    
+
     local s = getVarNumeric( "Version", 0, switch, MYSID )
     if s == 0 then
         L("Initializing new child switch %1", switch)
         initVar( "ImpulseTime", "0", switch, MYSID )
         initVar( "ImpulseResetTime", "0", switch, MYSID )
-        
+        initVar( "AlwaysUpdateStatus", "0", switch, MYSID )
+
         initVar( "Target", "0", switch, SWITCHSID )
         initVar( "Status", "0", switch, SWITCHSID )
-        
+
         initVar( "Target", "0", switch, VSSID )
         initVar( "Status", "0", switch, VSSID )
         initVar( "Text1", "Text1", switch, VSSID )
         initVar( "Text2", "Text2", switch, VSSID )
-        
+
         luup.attr_set('category_num', "3", switch)
         luup.attr_set('subcategory_num', "0", switch)
-        
+
         luup.attr_set( 'manufacturer', DEV_MFG, switch )
         luup.attr_set( 'model', DEV_MODEL, switch )
-        
+
         luup.variable_set( MYSID, "Version", _CONFIGVERSION, switch )
         return
     end
-    
+
     if s < 000002 then
         luup.attr_set( 'manufacturer', DEV_MFG, switch )
         luup.attr_set( 'model', DEV_MODEL, switch )
     end
-    
+
+    if s < 000003 then
+        initVar( "AlwaysUpdateStatus", 0, switch, MYSID )
+    end
+
     setVar( MYSID, "Version", _CONFIGVERSION, switch )
 end
 
@@ -284,7 +289,7 @@ local function startSwitches( dev )
     for _,switch in ipairs( switches ) do
         D("startSwitches() starting switch %1 (%2)", luup.devices[switch].description, switch)
         initSwitch( switch )
-        
+
         -- If switch had a pending impulse reset before restart, reschedule it.
         local reset = getVarNumeric( "ImpulseResetTime", 0, switch, MYSID )
         if reset > 0 then
@@ -332,12 +337,14 @@ function actionSetState( state, dev )
         state = state and "1" or "0"
         status = status and "1" or "0"
     end
-    
+
     luup.variable_set( SWITCHSID, "Target", state, dev )
     luup.variable_set( VSSID, "Target", state, dev )
-    local _,changed = setVar( SWITCHSID, "Status", status, dev )
-    setVar( VSSID, "Status", status, dev )
-    
+
+    local force = getVarNumeric( "AlwaysUpdateStatus", 0, dev, MYSID ) ~= 0
+    local changed = setVar( SWITCHSID, "Status", status, dev, force )
+    setVar( VSSID, "Status", status, dev, force )
+
     if status == "0" or status == "2" then
         D("actionSetState() clearing impulse task")
         scheduleTick( "impulse"..dev, 0 )
@@ -362,7 +369,7 @@ end
 function actionSetVisibility( switch, vis, pdev )
     switch = tonumber(switch) or -1
     assert( luup.devices[switch].device_type == CHILDTYPE )
-    if ( vis or "" ) == "" then 
+    if ( vis or "" ) == "" then
         -- If vis not provided, toggle.
         local m = luup.attr_get( 'invisible', switch )
         vis = ( m == "1" ) and "1" or "0"
@@ -388,7 +395,7 @@ function jobAddSwitch( count, pdev )
     end
     luup.chdev.sync( pdev, ptr )
     return 4,0
-end 
+end
 
 -- Enable or disable debug
 function actionSetDebug( state, tdev )
@@ -479,7 +486,7 @@ function startPlugin( pdev )
     end
 
     -- Check UI version
-    local okv,err = checkVersion( pdev ) 
+    local okv,err = checkVersion( pdev )
     if not okv then
         L({level=1,msg="This plugin does not run on this firmware: %1"}, err)
         gatewayStatus( err, pdev )
@@ -493,14 +500,14 @@ function startPlugin( pdev )
     -- More inits
     if isOpenLuup then
         local loader = require "openLuup.loader"
-        if loader.find_file == nil then 
+        if loader.find_file == nil then
             gatewayStatus( "openLuup upgrade required; must be 2018.11.21 or higher", pdev )
             L{level=1,msg="Your openLuup needs to be 2018.11.21 or higher; please update."}
             luup.set_failure( 1, pdev )
             return false, "Please update to 2018.11.21 or higher.", _PLUGIN_NAME
         end
-        if not ( loader.find_file( "D_BinaryLight1.xml" ) and 
-                loader.find_file( "D_BinaryLight1.json" ) 
+        if not ( loader.find_file( "D_BinaryLight1.xml" ) and
+                loader.find_file( "D_BinaryLight1.json" )
                 ) then
             gatewayStatus( "Incomplete installation; see log for details", pdev )
             L{level=1,msg="You have not completed the install of the supplemental files for openLuup. Please see the README file at https://github.com/toggledbits/Switchboard-Vera/blob/master/README.md"}

@@ -79,6 +79,7 @@ var Switchboard1_UI7 = (function(api, $) {
         var row = el.closest( 'div.row' );
         var dev = parseInt( row.attr( 'id' ) );
         var act = el.attr( 'id' );
+        var t;
 
         switch ( act ) {
             case 'visibility':
@@ -92,7 +93,7 @@ var Switchboard1_UI7 = (function(api, $) {
                 break;
 
             case 'impulse':
-                var t = api.getDeviceState( dev, serviceId, "ImpulseTime" ) || "0";
+                t = api.getDeviceState( dev, serviceId, "ImpulseTime" ) || "0";
                 while (true) {
                     t = prompt( 'Please enter pulse/reset time (secs, 0=normal operation):', t );
                     if ( t == null ) break;
@@ -103,6 +104,14 @@ var Switchboard1_UI7 = (function(api, $) {
                         break;
                     }
                 }
+                break;
+
+            case 'repeat':
+                t = 0 !== parseInt( api.getDeviceState( dev, serviceId, "AlwaysUpdateStatus" ) || 0 );
+                /* Set opposite icon and value */
+                jQuery( 'i#repeat', row ).text( t ? 'repeat_one' : 'repeat' )
+                    .attr( 'title', t ? "Trigger only if status changes" : "Always trigger" );
+                api.setDeviceStatePersistent( dev, serviceId, "AlwaysUpdateStatus", String(t ? 0 : 1) );
                 break;
 
             default:
@@ -168,6 +177,7 @@ var Switchboard1_UI7 = (function(api, $) {
             el = jQuery( '<div class="col-xs-4 col-md-2" />' );
             el.append( '<i id="visibility" class="material-icons md-btn" title="Toggle visibility">visibility</i>' );
             el.append( '<i id="impulse" class="material-icons md-btn" title="Set auto-reset timer">timer_off</i>' );
+            el.append( '<i id="repeat" class="material-icons md-btn" title="Trigger only if status changes">repeat_one</i>' );
             row.append( el );
             var s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text1" );
             row.append( '<div class="col-xs-4 col-md-2"><span id="vstext1" class="vstext"/><i id="vstext1" class="vstext material-icons md-btn">create</i></div>' );
@@ -183,7 +193,11 @@ var Switchboard1_UI7 = (function(api, $) {
             }
             st = parseInt( api.getDeviceState( obj.id, serviceId, "ImpulseTime" ) || 0 );
             if ( ! isNaN( st ) && st > 0 ) {
-                jQuery( 'i#impulse', row ).text( 'timer' );
+                jQuery( 'i#impulse', row ).text( 'timer' ).attr( 'title', 'Always trigger' );
+            }
+            st = 0 !== parseInt( api.getDeviceState( obj.id, serviceId, "AlwaysUpdateStatus" ) || 0 );
+            if ( st ) {
+                jQuery( 'i#repeat', row ).text( 'repeat' );
             }
 
             jQuery( 'img#state', row ).on( 'click.switchboard', handleStateClick );
