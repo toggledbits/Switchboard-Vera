@@ -12,6 +12,8 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
+    var pluginVersion = "1.2stable-19044";
+
     /* unique identifier for this plugin... */
     var uuid = 'fabe8224-2341-11e9-8762-74d4351650de'; /* 2019-01-28 Switchboard */
 
@@ -32,6 +34,15 @@ var Switchboard1_UI7 = (function(api, $) {
     /* Return footer */
     function footer() {
         var html = '';
+        html += '<div class="clearfix">';
+        html += '<div id="tbbegging"><em>Find Switchboard useful?</em> Please consider a small one-time donation to support this and my other plugins on <a href="https://www.toggledbits.com/donate" target="_blank">my web site</a>. I am grateful for any support you choose to give!</div>';
+        html += '<div id="tbcopyright">Switchboard ver ' + pluginVersion + ' &copy; 2018,2019 <a href="https://www.toggledbits.com/" target="_blank">Patrick H. Rigney</a>,' +
+            ' All Rights Reserved.<br/>' +
+            '<a href="http://forum.micasaverde.com/index.php/topic,120149.0.html" target="_blank">Support Forum Thread</a> &#149; <a href="https://github.com/toggledbits/Switchboard-Vera/" target="_blank">Documentation and license information</a>.';
+        try {
+            html += '<div id="browserident">' + navigator.userAgent + '</div>';
+        } catch( e ) {}
+
         return html;
     }
 
@@ -60,7 +71,7 @@ var Switchboard1_UI7 = (function(api, $) {
         });
         return dd;
     }
-    
+
     function handleStateClick( ev ) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
@@ -163,7 +174,7 @@ var Switchboard1_UI7 = (function(api, $) {
         row.append( '<div class="colhead col-xs-4 col-md-2">Text1</div>' );
         row.append( '<div class="colhead col-xs-4 col-md-2">Text2</div>' );
         container.append( row );
-        
+
         jQuery.each( switches, function( ix, obj ) {
             row = jQuery('<div class="row" />');
             var el = jQuery( '<div class="col-xs-1 col-md-1 text-right" />' );

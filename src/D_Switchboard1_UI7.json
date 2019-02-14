@@ -126,7 +126,7 @@
 					},
 					"Label": {
 						"lang_tag": "tb_switchboard_about",
-						"text": "Switchboard ver 1.0develop &#169; 2018 Patrick H. Rigney, All Rights Reserved.<br/><a href=\"http://forum.micasaverde.com/index.php/topic,118013.0.html\" target=\"_blank\">Support Forum Thread</a> &#149; <a href=\"https://github.com/toggledbits/Switchboard/\" target=\"_blank\">Documentation and license information</a>.<br>&nbsp;<br>Support links: <a href=\"/port_3480/data_request?id=lr_Switchboard&action=status\" target=\"_blank\">Plugin&nbsp;Status</a> &#149; <a href=\"/cgi-bin/cmh/log.sh?Device=LuaUPnP\" target=\"_blank\">Show&nbsp;Log</a>"
+						"text": "Switchboard ver 1.2stable-19044 &#169; 2018,2019 Patrick H. Rigney, All Rights Reserved.<br/><a href=\"http://forum.micasaverde.com/index.php/topic,120149.0.html\" target=\"_blank\">Support Forum Thread</a> &#149; <a href=\"https://github.com/toggledbits/Switchboard-Vera/\" target=\"_blank\">Documentation and license information</a>."
 					}
 				}
 			],
