@@ -12,7 +12,7 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-    var pluginVersion = "1.2develop";
+    var pluginVersion = "1.2";
 
     /* unique identifier for this plugin... */
     var uuid = 'fabe8224-2341-11e9-8762-74d4351650de'; /* 2019-01-28 Switchboard */

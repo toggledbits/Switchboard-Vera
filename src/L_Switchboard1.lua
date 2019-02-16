@@ -11,7 +11,7 @@ local debugMode = true
 
 local _PLUGIN_ID = 9194
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.2develop"
+local _PLUGIN_VERSION = "1.2"
 local _PLUGIN_URL = "https://www.toggledbits.com/"
 local _CONFIGVERSION = 000003
 
