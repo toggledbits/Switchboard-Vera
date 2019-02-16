@@ -7,7 +7,7 @@
 
 module("L_Switchboard1", package.seeall)
 
-local debugMode = true
+local debugMode = false
 
 local _PLUGIN_ID = 9194
 local _PLUGIN_NAME = "Switchboard"
