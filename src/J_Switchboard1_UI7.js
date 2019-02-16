@@ -75,7 +75,7 @@ var Switchboard1_UI7 = (function(api, $) {
     function handleStateClick( ev ) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
-        var dev = parseInt( row.attr( 'id' ) );
+        var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
         if ( api.getDeviceProperty( dev, "model" ) == "Switchboard Virtual Tri-state Switch" ) {
             var st = api.getDeviceState( dev, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "2";
             st = ( parseInt( st ) + 1 ) % 3;
@@ -88,18 +88,17 @@ var Switchboard1_UI7 = (function(api, $) {
     function handleIconClick( ev ) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
-        var dev = parseInt( row.attr( 'id' ) );
+        var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
         var act = el.attr( 'id' );
         var t;
 
         switch ( act ) {
             case 'visibility':
                 var vis = el.text() == "visibility";
-                api.setDeviceProperty( dev, 'invisible', vis ? 1 : 0, { persistent: true } );
-                /*
+                /* Changing the device property this way causes a Luup reload. So don't do that. We've got our own way. */
+                /* api.setDeviceProperty( dev, 'invisible', vis ? 1 : 0, { persistent: true } ); */
                 var devobj = api.getDeviceObject( dev );
                 api.performActionOnDevice( devobj.id_parent, serviceId, "SetSwitchVisibility", { actionArguments: { DeviceNum: dev, Visibility: vis ? "0" : "1" } });
-                */
                 el.text( vis ? "visibility_off" : "visibility" );
                 break;
 
@@ -132,7 +131,7 @@ var Switchboard1_UI7 = (function(api, $) {
     function handleTextClick( ev ) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
-        var dev = parseInt( row.attr( 'id' ) );
+        var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
         var subject = el.attr( 'id' ) == "vstext2" ? "Text2" : "Text1";
         var txt = api.getDeviceState( dev, "urn:upnp-org:serviceId:VSwitch1", subject ) || "";
         var newText = prompt( 'Enter new '+subject+' value:', txt );
@@ -146,17 +145,16 @@ var Switchboard1_UI7 = (function(api, $) {
     function handleNameClick( ev ) {
         var el = jQuery( ev.currentTarget );
         var row = el.closest( 'div.row' );
-        var dev = parseInt( row.attr( 'id' ) );
+        var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
         var devobj = api.getDeviceObject( dev );
         var txt = devobj.name;
         while ( true ) {
             txt = prompt( 'Enter new switch name:', txt );
             if ( txt == null ) break;
             if ( txt.match( /^.+$/ ) ) {
-                api.setDeviceProperty( dev, 'name', txt, { persistent: true } );
-                /*
+                /* This causes a Luup reload, so don't do it this way. We have our own way. */
+                /* api.setDeviceProperty( dev, 'name', txt, { persistent: true } ); */
                 api.performActionOnDevice( devobj.id_parent, serviceId, "SetSwitchName", { actionArguments: { DeviceNum: dev, NewName: txt } });
-                */
                 el.text( txt );
                 break;
             }
@@ -196,7 +194,7 @@ var Switchboard1_UI7 = (function(api, $) {
             s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text2" );
             row.append( '<div class="col-xs-4 col-md-2"><span id="vstext2" class="vstext"/><i id="vstext2" class="vstext material-icons md-btn">create</i></div>' );
             jQuery( 'span#vstext2', row ).text( s || "" );
-            row.attr( 'id', obj.id );
+            row.attr( 'id', 'd' + obj.id );
             container.append( row );
 
             if ( ( obj.invisible || "0" ) != "0" ) {
