@@ -345,12 +345,13 @@ function actionSetState( state, dev )
     local changed = setVar( SWITCHSID, "Status", status, dev, force )
     setVar( VSSID, "Status", status, dev, force )
 
-    if status == "0" or status == "2" then
+    if status == "0" then
         D("actionSetState() clearing impulse task")
         scheduleTick( "impulse"..dev, 0 )
         setVar( MYSID, "ImpulseResetTime", "0", dev )
     elseif changed then
-        -- Transition to on status.
+        -- Transition to on (or tri-state void) status. Timer may run in any
+        -- status other than "off".
         local delay = getVarNumeric( "ImpulseTime", 0, dev, MYSID )
         if delay > 0 then
             D("actionSetState() impulse reset in %1 secs", delay)
