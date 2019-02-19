@@ -23,7 +23,7 @@ var Switchboard1_UI7 = (function(api, $) {
     // var deviceType = "urn:schemas-toggledbits-com:device:Switchboard:1";
 
     var inStatusPanel = false;
-    // var isOpenLuup = false;
+    var isOpenLuup = false;
     var isALTUI = ( "undefined" !== typeof(MultiBox) );
 
     /* Closing the control panel. */
@@ -47,6 +47,14 @@ var Switchboard1_UI7 = (function(api, $) {
     }
 
     function initModule() {
+        var dl = api.getListOfDevices();
+        for ( var ix=0; ix<dl.length; ++ix ) {
+            if ( dl[ix].device_type == "openLuup" && dl[ix].id_parent == 0 ) {
+                isOpenLuup = true;
+                break;
+            }
+        }
+
         api.registerEventHandler('on_ui_cpanel_before_close', Switchboard1_UI7, 'onBeforeCpanelClose');
         inStatusPanel = false;
 
@@ -186,7 +194,9 @@ var Switchboard1_UI7 = (function(api, $) {
             el = jQuery( '<div class="col-xs-4 col-md-2" />' );
             el.append( '<i id="visibility" class="material-icons md-btn" title="Toggle visibility">visibility</i>' );
             el.append( '<i id="impulse" class="material-icons md-btn" title="Set auto-reset timer">timer_off</i>' );
-            el.append( '<i id="repeat" class="material-icons md-btn" title="Trigger only if status changes">repeat_one</i>' );
+            if ( isOpenLuup ) {
+                el.append( '<i id="repeat" class="material-icons md-btn" title="Trigger only if status changes">repeat_one</i>' );
+            }
             row.append( el );
             var s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text1" );
             row.append( '<div class="col-xs-4 col-md-2"><span id="vstext1" class="vstext"/><i id="vstext1" class="vstext material-icons md-btn">create</i></div>' );
