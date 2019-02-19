@@ -60,7 +60,7 @@
             <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
             <name>SetTarget</name>
             <run>
-                SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
+                return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
             </run>
         </action>
 
@@ -68,7 +68,7 @@
             <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
             <name>SetTarget</name>
             <run>
-                SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
+                return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
             </run>
         </action>
         <action>
@@ -76,20 +76,22 @@
           <name>ToggleState</name>
           <run>
                 SwitchboardPlugin.actionToggleState( lul_device )
+                return true
           </run>
         </action>
         <action>
           <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
           <name>GetText1</name>
           <run>
-            luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_device)
+                luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_device)
           </run>
         </action>
         <action>
           <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
           <name>SetText1</name>
           <run>
-            luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_settings.newTextValue or lul_settings.newText1Value, lul_device)
+                luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_settings.newTextValue or lul_settings.newText1Value, lul_device)
+                return true
           </run>
         </action>
         
@@ -97,14 +99,15 @@
           <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
           <name>GetText2</name>
           <run>
-            luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_device)
+                luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_device)
           </run>
         </action>
         <action>
           <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
           <name>SetText2</name>
           <run>
-            luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_settings.newTextValue or lul_settings.newText2Value, lul_device)
+                luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_settings.newTextValue or lul_settings.newText2Value, lul_device)
+                return true
           </run>
         </action>
 
@@ -113,6 +116,7 @@
             <name>ToggleState</name>
             <run>
                 SwitchboardPlugin.actionToggleState( lul_device )
+                return true
             </run>
         </action>
     </actionList>

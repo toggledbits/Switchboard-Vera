@@ -360,6 +360,7 @@ function actionSetState( state, dev )
             scheduleTick( { id="impulse"..dev, owner=dev, func=resetSwitch }, delay )
         end
     end
+    return true
 end
 
 function actionToggleState( dev )
