@@ -39,6 +39,14 @@
             </argumentList>
         </action>
         <action>
+            <name>AddChild</name>
+            <argumentList>
+                <name>DeviceType</name>
+                <direction>in</direction>
+                <relatedStateVariable>A_ARG_TYPE_string</relatedStateVariable>
+            </argumentList>
+        </action>
+        <action>
             <name>SetSwitchVisibility</name>
             <argumentList>
                 <argument>
