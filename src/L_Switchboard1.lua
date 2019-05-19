@@ -11,11 +11,11 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.3develop-19139"
+local _PLUGIN_VERSION = "1.3"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19098
-local _UIVERSION = 371
+local _UIVERSION = 19139
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
@@ -297,11 +297,13 @@ local function initSwitch( switch )
 	if s < 000003 then
 		initVar( "AlwaysUpdateStatus", 0, switch, MYSID )
 	end
-	
+
 	if s < 19098 then
 		local b = "Binary"
 		if luup.attr_get( "device_json", switch ) == "D_TriStateSwitch.json" then
 			b = "TriState"
+		elseif luup.devices[switch].device_type == "urn:schemas-upnp-org:device:DimmableLight:1" then
+			b = "Dimmer"
 		end
 		luup.variable_set( MYSID, "Behavior", b, switch )
 	end
