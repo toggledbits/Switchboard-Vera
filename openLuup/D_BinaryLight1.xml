@@ -19,7 +19,7 @@
 		<serviceList>
 			<service>
 				<serviceType>urn:schemas-upnp-org:service:SwitchPower:1</serviceType>
-				<serviceId>urn:upnp-org:serviceId:SwitchPower:1</serviceId>
+				<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
 				<SCPDURL>S_SwitchPower1.xml</SCPDURL>
 			</service>
 		 </serviceList>
