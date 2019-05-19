@@ -300,7 +300,7 @@ local function initSwitch( switch )
 
 	if s < 19098 then
 		local b = "Binary"
-		if luup.attr_get( "device_json", switch ) == "D_TriStateSwitch.json" then
+		if luup.attr_get( "device_json", switch ) == "D_TriStateSwitch1.json" then
 			b = "TriState"
 		elseif luup.devices[switch].device_type == "urn:schemas-upnp-org:device:DimmableLight:1" then
 			b = "Dimmer"
