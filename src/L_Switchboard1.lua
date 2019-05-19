@@ -11,7 +11,7 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.3develop"
+local _PLUGIN_VERSION = "1.3develop-19139"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19098
@@ -354,8 +354,9 @@ end
 
 function actionSetState( state, dev )
 	-- Switch on/off
+	local behavior = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
 	local status
-	if state == "2" and true then -- tri-state
+	if tostring(state) == "2" and behavior == "TriState" then -- tri-state
 		status = "2"
 	else
 		if type(state) == "string" then state = ( tonumber(state) or 0 ) ~= 0
@@ -365,11 +366,10 @@ function actionSetState( state, dev )
 		state = state and "1" or "0"
 		status = status and "1" or "0"
 	end
+	D("actionSetState() state=%1, status=%2", state, status)
 
 	luup.variable_set( SWITCHSID, "Target", state, dev )
 	luup.variable_set( VSSID, "Target", state, dev )
-	
-	local behavior = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
 
 	local force = getVarNumeric( "AlwaysUpdateStatus", 0, dev, MYSID ) ~= 0
 	local changed = setVar( SWITCHSID, "Status", status, dev, force )
@@ -428,8 +428,23 @@ function actionSetBrightness( level, dev )
 end
 
 function actionToggleState( dev )
-	local t = getVarNumeric( "Target", 0, dev, SWITCHSID ) ~= 0
-	actionSetState( t and "0" or "1", dev )
+	D("actionToggleState(%1)", dev)
+	local t = getVarNumeric( "Target", 0, dev, SWITCHSID )
+	local b = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
+	D("actionToggleState() b=%1, target=%2", b, t)
+	if "TriState" == b then
+		-- TriState rolls On->Void->Off->Void->On...
+		if t ~= 2 then
+			setVar( MYSID, "TSPriorState", t, dev )
+			actionSetState( "2", dev )
+		else
+			local l = getVarNumeric( "TSPriorState", 0, dev, MYSID ) ~= 0
+			D("actionToggleState() prior=%1", l)
+			actionSetState( l and 0 or 1, dev )
+		end
+	else
+		actionSetState( (t~=0) and 0 or 1, dev )
+	end
 	return true
 end
 
@@ -452,7 +467,7 @@ function jobAddSwitch( count, pdev )
 	local ptr,children = prepForNewChildren()
 	local id = 0
 	for _,d in ipairs( children ) do
-		local did = tonumber(luup.devices[d].id) or 0
+		local did = tonumber(d.device.id) or 0
 		if did > id then id = did end
 	end
 	for _=1,count do

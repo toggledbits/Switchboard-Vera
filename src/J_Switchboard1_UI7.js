@@ -13,7 +13,7 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-	var pluginVersion = "1.3develop";
+	var pluginVersion = "1.3develop-19139";
 
 	var _UIVERSION = 371; /* must agree with L_Switchboard1.lua */
 
@@ -111,13 +111,7 @@ var Switchboard1_UI7 = (function(api, $) {
 		var el = jQuery( ev.currentTarget );
 		var row = el.closest( 'div.row' );
 		var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
-		if ( api.getDeviceProperty( dev, "model" ) == "Switchboard Virtual Tri-state Switch" ) {
-			var st = api.getDeviceState( dev, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "2";
-			st = ( parseInt( st ) + 1 ) % 3;
-			api.performActionOnDevice( dev, "urn:upnp-org:serviceId:SwitchPower1", "SetTarget", { actionArguments: { newTargetValue: String(st) } } );
-		} else {
-			api.performActionOnDevice( dev, "urn:micasaverde-com:serviceId:HaDevice1", "ToggleState", { actionArguments: {} });
-		}
+		api.performActionOnDevice( dev, "urn:micasaverde-com:serviceId:HaDevice1", "ToggleState", { actionArguments: {} });
 	}
 
 	function handleIconClick( ev ) {
