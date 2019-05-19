@@ -710,6 +710,79 @@ function tick(p)
 	end
 end
 
+local function getDevice( dev, pdev, v )
+	if v == nil then v = luup.devices[dev] end
+	if json == nil then json = require("dkjson") end
+	local devinfo = {
+		  devNum=dev
+		, ['type']=v.device_type
+		, description=v.description or ""
+		, room=v.room_num or 0
+		, udn=v.udn or ""
+		, id=v.id
+		, parent=v.device_num_parent or pdev
+		, ['device_json'] = luup.attr_get( "device_json", dev )
+		, ['impl_file'] = luup.attr_get( "impl_file", dev )
+		, ['device_file'] = luup.attr_get( "device_file", dev )
+		, manufacturer = luup.attr_get( "manufacturer", dev ) or ""
+		, model = luup.attr_get( "model", dev ) or ""
+		, category = luup.attr_get( "category_num", dev ) or ""
+		, subcategory = luup.attr_get( "subcategory_num", dev ) or ""
+	}
+	local rc,t,httpStatus,uri
+	if isOpenLuup then
+		uri = "http://localhost:3480/data_request?id=status&DeviceNum=" .. dev .. "&output_format=json"
+	else
+		uri = "http://localhost/port_3480/data_request?id=status&DeviceNum=" .. dev .. "&output_format=json"
+	end
+	rc,t,httpStatus = luup.inet.wget(uri, 15)
+	if httpStatus ~= 200 or rc ~= 0 then
+		devinfo['_comment'] = string.format( 'State info could not be retrieved, rc=%s, http=%s', tostring(rc), tostring(httpStatus) )
+		return devinfo
+	end
+	local d = json.decode(t)
+	local key = "Device_Num_" .. dev
+	if d ~= nil and d[key] ~= nil and d[key].states ~= nil then d = d[key].states else d = nil end
+	devinfo.states = d or {}
+	return devinfo
+end
+
+-- A "safer" JSON encode for Lua structures that may contain recursive refereance.
+-- This output is intended for display ONLY, it is not to be used for data transfer.
+local function alt_json_encode( st, seen )
+	seen = seen or {}
+	str = "{"
+	local comma = false
+	for k,v in pairs(st) do
+		str = str .. ( comma and "," or "" )
+		comma = true
+		str = str .. '"' .. k .. '":'
+		if type(v) == "table" then
+			if seen[v] then str = str .. '"(recursion)"'
+			else
+				seen[v] = k
+				str = str .. alt_json_encode( v, seen )
+			end
+		else
+			str = str .. stringify( v, seen )
+		end
+	end
+	str = str .. "}"
+	return str
+end
+
+-- Stringify a primitive type
+stringify = function( v, seen )
+	if v == nil then
+		return "(nil)"
+	elseif type(v) == "number" or type(v) == "boolean" then
+		return tostring(v)
+	elseif type(v) == "table" then
+		return alt_json_encode( v, seen )
+	end
+	return string.format( "%q", tostring(v) )
+end
+
 function requestHandler( lul_request, lul_parameters, lul_outputformat )
 	D("request(%1,%2,%3) luup.device=%4", lul_request, lul_parameters, lul_outputformat, luup.device)
 	local action = lul_parameters['action'] or lul_parameters['command'] or ""
@@ -738,6 +811,35 @@ function requestHandler( lul_request, lul_parameters, lul_outputformat )
 			r = dfMap
 		end
 		return json.encode( r ), "application/json"
+
+	elseif action == "status" then
+		local st = {
+			name=_PLUGIN_NAME,
+			plugin=_PLUGIN_ID,
+			version=_PLUGIN_VERSION,
+			configversion=_CONFIGVERSION,
+			uiversion=_UIVERSION,
+			author="Patrick H. Rigney (rigpapa)",
+			url=_PLUGIN_URL,
+			['type']=MYTYPE,
+			responder=luup.device,
+			timestamp=os.time(),
+			system = {
+				version=luup.version,
+				isOpenLuup=isOpenLuup,
+				isALTUI=isALTUI,
+				hardware=luup.attr_get("model",0),
+				lua=tostring((_G or {})._VERSION)
+			},
+			devices={}
+		}
+		for k,v in pairs( luup.devices ) do
+			if v.device_type == MYTYPE or v.device_num_parent == pluginDevice then
+				local devinfo = getDevice( k, pluginDevice, v ) or {}
+				table.insert( st.devices, devinfo )
+			end
+		end
+		return alt_json_encode( st ), "application/json"
 
 	else
 		return string.format("Action %q not implemented", action), "text/plain"
