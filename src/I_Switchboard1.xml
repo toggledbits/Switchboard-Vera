@@ -1,139 +1,145 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- I_Switchboard1.xml -->
 <implementation>
-    <functions>
-        -- --------------------------------------------------------------------
-        -- Switchboard
-        -- Copyright 2019 Patrick H. Rigney, All Rights Reserved.
-        -- https://www.toggledbits.com/
-        -- --------------------------------------------------------------------
-        function startupSwitchboardPlugin(devNum)
-            luup.log("Switchboard Plugin STARTUP!")
-            SwitchboardPlugin = require("L_Switchboard1")
-            if not SwitchboardPlugin then
-                luup.log("SwitchboardPlugin startup FAILED",1)
-                return false
-            end
-            switchboardTick = SwitchboardPlugin.tick
+	<functions>
+		-- --------------------------------------------------------------------
+		-- Switchboard
+		-- Copyright 2019 Patrick H. Rigney, All Rights Reserved.
+		-- https://www.toggledbits.com/
+		-- --------------------------------------------------------------------
+		function startupSwitchboardPlugin(devNum)
+			luup.log("Switchboard Plugin STARTUP!")
+			SwitchboardPlugin = require("L_Switchboard1")
+			if not SwitchboardPlugin then
+				luup.log("SwitchboardPlugin startup FAILED",1)
+				return false
+			end
+			switchboardTick = SwitchboardPlugin.tick
 			switchboardRequestHandler = SwitchboardPlugin.requestHandler
 			luup.register_handler("switchboardRequestHandler", "Switchboard")
-            return SwitchboardPlugin.startPlugin( devNum )
-        end
-    </functions>
-    <startup>startupSwitchboardPlugin</startup>
-    <actionList>
-        <action>
-            <serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
-            <name>AddSwitch</name>
-            <job>
-                return SwitchboardPlugin.jobAddSwitch( lul_settings.Count or "1", lul_device )
-            </job>
-        </action>
-        <action>
-            <serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
-            <name>AddChild</name>
-            <job>
-                return SwitchboardPlugin.jobAddChild( lul_settings.DeviceType, lul_device )
-            </job>
-        </action>
-        <action>
-            <serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
-            <name>MasterClear</name>
-            <job>
-                return SwitchboardPlugin.jobMasterClear( lul_device )
-            </job>
-        </action>
-        <action>
-            <serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
-            <name>SetDebug</name>
-            <run>
-                SwitchboardPlugin.actionSetDebug( lul_settings.debug or "0", lul_device )
-            </run>
-        </action>
-        <action>
-            <serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
-            <name>SetSwitchVisibility</name>
-            <run>
-                SwitchboardPlugin.actionSetVisibility( lul_settings.DeviceNum, lul_settings.Visibility, lul_device )
-            </run>
-        </action>
-        <action>
-            <serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
-            <name>SetSwitchName</name>
-            <run>
-                luup.attr_set( "name", lul_settings.NewName or "Virtual Switch", tonumber(lul_settings.DeviceNum) or -1 )
-            </run>
-        </action>
+			return SwitchboardPlugin.startPlugin( devNum )
+		end
+	</functions>
+	<startup>startupSwitchboardPlugin</startup>
+	<actionList>
+		<action>
+			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
+			<name>AddSwitch</name>
+			<job>
+				return SwitchboardPlugin.jobAddSwitch( lul_settings.Count or "1", lul_device )
+			</job>
+		</action>
+		<action>
+			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
+			<name>AddChild</name>
+			<job>
+				return SwitchboardPlugin.jobAddChild( lul_settings.DeviceType, lul_device )
+			</job>
+		</action>
+		<action>
+			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
+			<name>MasterClear</name>
+			<job>
+				return SwitchboardPlugin.jobMasterClear( lul_device )
+			</job>
+		</action>
+		<action>
+			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
+			<name>SetDebug</name>
+			<run>
+				SwitchboardPlugin.actionSetDebug( lul_settings.debug or "0", lul_device )
+			</run>
+		</action>
+		<action>
+			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
+			<name>SetSwitchVisibility</name>
+			<run>
+				SwitchboardPlugin.actionSetVisibility( lul_settings.DeviceNum, lul_settings.Visibility, lul_device )
+			</run>
+		</action>
+		<action>
+			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
+			<name>SetSwitchName</name>
+			<run>
+				luup.attr_set( "name", lul_settings.NewName or "Virtual Switch", tonumber(lul_settings.DeviceNum) or -1 )
+			</run>
+		</action>
 
-        <action>
-            <serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
-            <name>SetTarget</name>
-            <run>
-                return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
-            </run>
-        </action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+			<name>SetTarget</name>
+			<run>
+				return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
+			</run>
+		</action>
 
-        <action>
-            <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
-            <name>SetTarget</name>
-            <run>
-                return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
-            </run>
-        </action>
-        <action>
-          <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
-          <name>ToggleState</name>
-          <run>
-                SwitchboardPlugin.actionToggleState( lul_device )
-                return true
-          </run>
-        </action>
-        <action>
-          <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
-          <name>GetText1</name>
-          <run>
-                luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_device)
-          </run>
-        </action>
-        <action>
-          <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
-          <name>SetText1</name>
-          <run>
-                luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_settings.newTextValue or lul_settings.newText1Value, lul_device)
-                return true
-          </run>
-        </action>
-        <action>
-          <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
-          <name>GetText2</name>
-          <run>
-                luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_device)
-          </run>
-        </action>
-        <action>
-          <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
-          <name>SetText2</name>
-          <run>
-                luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_settings.newTextValue or lul_settings.newText2Value, lul_device)
-                return true
-          </run>
-        </action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
+			<name>SetTarget</name>
+			<run>
+				luup.log("The use of the VSwitch1 service is deprecated. Please use urn:upnp-org:serviceId:SwitchPower1",1)
+				return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
+			</run>
+		</action>
+		<action>
+		  <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
+		  <name>ToggleState</name>
+		  <run>
+				luup.log("The use of the VSwitch1 service is deprecated. Please use urn:upnp-org:serviceId:SwitchPower1",1)
+				SwitchboardPlugin.actionToggleState( lul_device )
+				return true
+		  </run>
+		</action>
+		<action>
+		  <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
+		  <name>GetText1</name>
+		  <run>
+				luup.log("The use of the VSwitch1 service is deprecated. Please use urn:upnp-org:serviceId:SwitchPower1",1)
+				luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_device)
+		  </run>
+		</action>
+		<action>
+		  <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
+		  <name>SetText1</name>
+		  <run>
+				luup.log("The use of the VSwitch1 service is deprecated. Please use urn:upnp-org:serviceId:SwitchPower1",1)
+				luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text1", lul_settings.newTextValue or lul_settings.newText1Value, lul_device)
+				return true
+		  </run>
+		</action>
+		<action>
+		  <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
+		  <name>GetText2</name>
+		  <run>
+				luup.log("The use of the VSwitch1 service is deprecated. Please use urn:upnp-org:serviceId:SwitchPower1",1)
+				luup.variable_get("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_device)
+		  </run>
+		</action>
+		<action>
+		  <serviceId>urn:upnp-org:serviceId:VSwitch1</serviceId>
+		  <name>SetText2</name>
+		  <run>
+				luup.log("The use of the VSwitch1 service is deprecated. Please use urn:upnp-org:serviceId:SwitchPower1",1)
+				luup.variable_set("urn:upnp-org:serviceId:VSwitch1", "Text2", lul_settings.newTextValue or lul_settings.newText2Value, lul_device)
+				return true
+		  </run>
+		</action>
 
-        <action>
-            <serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
-            <name>SetLoadLevelTarget</name>
-            <run>
-                return SwitchboardPlugin.actionSetBrightness( lul_settings.newLoadlevelTarget, lul_device )
-            </run>
-        </action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:Dimming1</serviceId>
+			<name>SetLoadLevelTarget</name>
+			<run>
+				return SwitchboardPlugin.actionSetBrightness( lul_settings.newLoadlevelTarget, lul_device )
+			</run>
+		</action>
 
-        <action>
-            <serviceId>urn:micasaverde-com:serviceId:HaDevice1</serviceId>
-            <name>ToggleState</name>
-            <run>
-                SwitchboardPlugin.actionToggleState( lul_device )
-                return true
-            </run>
-        </action>
-    </actionList>
+		<action>
+			<serviceId>urn:micasaverde-com:serviceId:HaDevice1</serviceId>
+			<name>ToggleState</name>
+			<run>
+				SwitchboardPlugin.actionToggleState( lul_device )
+				return true
+			</run>
+		</action>
+	</actionList>
 </implementation>
