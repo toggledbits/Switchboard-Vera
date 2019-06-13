@@ -176,16 +176,18 @@ var Switchboard1_UI7 = (function(api, $) {
 		var row = el.closest( 'div.row' );
 		var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
 		var devobj = api.getDeviceObject( dev );
-		var txt = devobj.name;
-		while ( true ) {
-			txt = prompt( 'Enter new switch name:', txt );
-			if ( txt == null ) break;
-			if ( txt.match( /^.+$/ ) ) {
-				/* This causes a Luup reload, so don't do it this way. We have our own way. */
-				/* api.setDeviceProperty( dev, 'name', txt, { persistent: true } ); */
-				api.performActionOnDevice( devobj.id_parent, serviceId, "SetSwitchName", { actionArguments: { DeviceNum: dev, NewName: txt } });
-				el.text( txt );
-				break;
+		if ( devobj ) {
+			var txt = devobj.name;
+			while ( true ) {
+				txt = prompt( 'Enter new switch name:', txt );
+				if ( txt == null ) break;
+				if ( txt.match( /^.+$/ ) ) {
+					/* This causes a Luup reload, so don't do it this way. We have our own way. */
+					/* api.setDeviceProperty( dev, 'name', txt, { persistent: true } ); */
+					api.performActionOnDevice( devobj.id_parent, serviceId, "SetSwitchName", { actionArguments: { DeviceNum: dev, NewName: txt } });
+					el.text( txt );
+					break;
+				}
 			}
 		}
 	}
