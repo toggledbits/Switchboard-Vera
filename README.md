@@ -51,6 +51,12 @@ NOTE: Turning "on" a pulse switch that is already on does not extend pulse timin
 
 NOTE: When a switch is hidden, it will also not be visible in Vera's scene trigger menus and other places in the UI, so if you're trying to create a new scene using a hidden virtual switch, you will first need to go into the Switchboard status panel and un-hide the switch. You can re-hide it after; that doesn't affect the scene's ability to *use* the switch.
 
+## Virtual Window Covering
+
+It may seem odd to have virtual window coverings, but in Vera, the window covering implementation uses the `Dimming1` service to set the opening (e.g. 0% is closed, and 50% is half open, and 100% is fully open). Calling `SetLoadLevelTarget` as one would for a dimmer controls the shade opening. The `SwitchPower` action `SetTarget` can also be used to quickly fully-open or fully-close the covering.
+
+By default, Switchboard will simulate motor movement of the covering by ramping `LoadLevelStatus` at a rate of 5% per second to the target value. If your application requires a different rate, it can be set by setting `RampRatePerSecond` (as percent per second). Setting it to 0 disables ramp and causes the covering to go immediately to the requested target value.
+
 ## Legacy Virtual Switch Features
 
 To maintain compatibility with the older Virtual Switch plugin's switches, Switchboard's switches implement the services and behaviors of the older plugin, in addition to the standard Vera binary switch behaviors.

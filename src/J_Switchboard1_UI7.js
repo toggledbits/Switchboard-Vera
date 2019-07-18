@@ -13,9 +13,9 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-	var pluginVersion = "1.3";
+	var pluginVersion = "1.4develop-19199";
 
-	var _UIVERSION = 19139; /* must agree with L_Switchboard1.lua */
+	var _UIVERSION = 19199; /* must agree with L_Switchboard1.lua */
 
 	/* unique identifier for this plugin... */
 	var uuid = 'fabe8224-2341-11e9-8762-74d4351650de'; /* 2019-01-28 Switchboard */
@@ -53,7 +53,7 @@ var Switchboard1_UI7 = (function(api, $) {
 		var myid = api.getCpanelDeviceId();
 
 		/* Check agreement of plugin core and UI */
-		var s = api.getDeviceState( myid, "urn:toggledbits-com:serviceId:Switchboard1", "_UIV" ) || "0";
+		var s = api.getDeviceState( myid, serviceId, "_UIV", { dynamic: false } ) || "0";
 		console.log("initModule() for device " + myid + " requires UI version " + _UIVERSION + ", seeing " + s);
 		if ( String(_UIVERSION) != s ) {
 			api.setCpanelContent( '<div style="border: 4px solid red; padding: 8px;">' +
@@ -206,13 +206,20 @@ var Switchboard1_UI7 = (function(api, $) {
 		container.append( row );
 
 		jQuery.each( switches, function( ix, obj ) {
+			var behavior = api.getDeviceState( obj.id, serviceId, "Behavior" ) || "Binary";
 			row = jQuery('<div class="row devicerow" />');
 			var el = jQuery( '<div class="col-xs-1 col-md-1 text-right" />' );
 			var st = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "0";
-			el.append( jQuery( '<img id="state" src="https://www.toggledbits.com/assets/switchboard/switchboard-switch-' +
-				( {"0":"off","1":"on","2":"x"}[st] || "x" ) + '.png" width="32" height="32" alt="switch state">' )
-				.attr( 'title', 'Click to toggle state' )
-			);
+			if ( "Cover" === behavior ) {
+				var l = parseInt( api.getDeviceState( obj.id, "urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus" ) || "0" );
+				l = Math.floor( l / 10 + 0.5 ) * 10;
+				el.append( '<img id="state" src="/cmh/skins/default/img/devices/device_states/window_covering_' +
+					( st == "0" ? "off" : l ) + '.png" width="32" height="32" alt="cover state">' );
+			} else {
+				el.append( '<img id="state" src="https://www.toggledbits.com/assets/switchboard/switchboard-switch-' +
+					( {"0":"off","1":"on","2":"x"}[st] || "x" ) + '.png" width="32" height="32" alt="switch state">' );
+			}
+			el.attr( 'title', 'Click to toggle state' );
 			row.append( el );
 			row.append( jQuery( '<div class="vsname col-xs-11 col-md-5" />' ).text( obj.name + ' (#' + obj.id + ')' ).attr( 'title', 'Click to change name' ) );
 			el = jQuery( '<div class="col-xs-4 col-md-2" />' );
@@ -356,13 +363,28 @@ var Switchboard1_UI7 = (function(api, $) {
 			}).done( function( data, statusText, jqXHR ) {
 				var hasOne = false;
 				var childMenu = jQuery( 'div#tail select#childtype' );
-				for ( var ch in data ) {
+				var lx = [];
+				var ch;
+				for ( ch in data ) {
 					if ( data.hasOwnProperty( ch ) ) {
-						childMenu.append( jQuery( '<option/>' ).val( ch ).text( data[ch].name || ch ) );
-						hasOne = true;
+						lx[lx.length] = ch;
 					}
 				}
-				if ( hasOne ) {
+				lx.sort( function( a, b ) {
+					var p1 = data[a].order || 32767;
+					var p2 = data[b].order || 32767;
+					if ( p1 == p2 ) {
+						/* the names will never be equal */
+						return data[a].name < data[b].name ? -1 : 1;
+					}
+					return p1 - p2;
+				});
+				for ( var k=0; k<lx.length; k++) {
+					ch = lx[k];
+					childMenu.append( jQuery( '<option/>' ).val( ch ).text( data[ch].name || ch ) );
+					hasOne = true;
+				}
+				if ( 0 === lx.length ) {
 					jQuery( 'div#tail button#addchild' ).prop( 'disabled', false );
 				}
 			}).fail( function( jqXHR ) {

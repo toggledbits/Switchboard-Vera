@@ -11,11 +11,11 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.3"
+local _PLUGIN_VERSION = "1.4develop-19199"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19098
-local _UIVERSION = 19139
+local _UIVERSION = 19199
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
@@ -37,11 +37,13 @@ local tickTasks = {}
 -- A different kind of dfMap here
 local dfMap = {
 	  ['Dimmer'] =
-			{ name="Dimmer", device_type="urn:schemas-upnp-org:device:DimmableLight:1", device_file="D_DimmableLight1.xml", category=2, subcategory=0, device_json="D_DimmableLight1.json" }
+			{ name="Dimmer", device_type="urn:schemas-upnp-org:device:DimmableLight:1", device_file="D_DimmableLight1.xml", category=2, subcategory=0, device_json="D_DimmableLight1.json", order=2 }
 	, ['Binary'] =
-			{ name="Binary Switch", device_type="urn:schemas-upnp-org:device:BinaryLight:1", device_file="D_BinaryLight1.xml", category=3, subcategory=1, device_json="D_BinaryLight1.json" }
+			{ name="Binary Switch", device_type="urn:schemas-upnp-org:device:BinaryLight:1", device_file="D_BinaryLight1.xml", category=3, subcategory=1, device_json="D_BinaryLight1.json", order=1 }
 	, ['TriState'] =
-			{ name="Tri-state Switch", device_type="urn:schemas-upnp-org:device:BinaryLight:1", device_file="D_BinaryLight1.xml", category=3, subcategory=1, device_json="D_TriStateSwitch1.json" }
+			{ name="Tri-state Switch", device_type="urn:schemas-upnp-org:device:BinaryLight:1", device_file="D_BinaryLight1.xml", category=3, subcategory=1, device_json="D_TriStateSwitch1.json", order=3 }
+	, ['Cover'] =
+			{ name="Window Covering", device_type="urn:schemas-micasaverde-com:device:WindowCovering:1", device_file="D_WindowCovering1.xml", category=8, subcategory=1, device_json="D_WindowCovering1.json", order=4 }
 }
 
 local function dump(t, seen)
@@ -283,6 +285,10 @@ local function initSwitch( switch )
 			initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
 			initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
 			initVar( "LoadLevelLast", 100, switch, DIMMERSID )
+		elseif b == "Cover" then
+			initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
+			initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
+			initVar( "RampRatePerSecond", 5, switch, DIMMERSID )
 		end
 
 		luup.variable_set( MYSID, "Version", _CONFIGVERSION, switch )
@@ -348,6 +354,51 @@ resetSwitch = function( switch, taskid )
 	end
 end
 
+
+local function rampRun( pdev, taskid )
+	local level = getVarNumeric( "LoadLevelStatus", 0, pdev, DIMMERSID )
+	local target = getVarNumeric( "LoadLevelTarget", 0, pdev, DIMMERSID )
+	local rate = math.floor( getVarNumeric( "RampRatePerSecond", 5, pdev, MYSID ) )
+	if rate < 1 then rate = 1 elseif rate > 100 then rate = 100 end
+	local diff = target - level
+	if diff > 0 and diff > rate then
+		diff = rate
+	elseif diff < 0 and (-diff) > rate then
+		diff = -rate
+	end
+	level = level + diff
+	if level < 0 then level = 0 elseif level > 100 then level = 100 end
+	setVar( DIMMERSID, "LoadLevelStatus", level, pdev )
+	if level == 0 then
+		setVar( SWITCHSID, "Status", 0, pdev )
+	elseif level > 0 then
+		setVar( SWITCHSID, "Status", 1, pdev )
+	end
+	if ( target - level ) ~= 0 then
+		scheduleTick( taskid, os.time()+1 )
+	end
+end
+
+local function rampStart( pdev )
+	local rate = math.floor( getVarNumeric( "RampRatePerSecond", 5, pdev, MYSID ) )
+	if rate == 0 then
+		-- Special config: if ramp rate is 0, just go right to the target level.
+		local target = getVarNumeric( "LoadLevelTarget", 0, pdev, DIMMERSID )
+		setVar( DIMMERSID, "LoadLevelStatus", target, pdev )
+		if target <= 0 then
+			setVar( SWITCHSID, "Status", 0, pdev )
+		elseif target > 0 then
+			setVar( SWITCHSID, "Status", 1, pdev )
+		end
+	else
+		scheduleTick( { id="ramp"..tostring(pdev), owner=pdev, func=rampRun }, os.time()+1 )
+	end
+end
+
+local function rampStop( pdev )
+	scheduleTick( "ramp"..tostring(pdev), 0 )
+end
+
 --[[
 	***************************************************************************
 	A C T I O N   I M P L E M E N T A T I O N
@@ -355,6 +406,7 @@ end
 --]]
 
 function actionSetState( state, dev )
+	D("actionSetState(%1,%2)",state,dev)
 	-- Switch on/off
 	local behavior = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
 	local status
@@ -371,8 +423,15 @@ function actionSetState( state, dev )
 	D("actionSetState() state=%1, status=%2", state, status)
 
 	luup.variable_set( SWITCHSID, "Target", state, dev )
-	luup.variable_set( VSSID, "Target", state, dev )
 
+	-- For window covering, set target level and ramp.
+	if behavior == "Cover" then
+		setVar( DIMMERSID, "LoadLevelTarget", state=="0" and 0 or 100, dev )
+		rampStart( dev )
+		return true
+	end
+
+	luup.variable_set( VSSID, "Target", state, dev )
 	local force = getVarNumeric( "AlwaysUpdateStatus", 0, dev, MYSID ) ~= 0
 	local changed = setVar( SWITCHSID, "Status", status, dev, force )
 	setVar( VSSID, "Status", status, dev, force )
@@ -412,17 +471,32 @@ function actionSetState( state, dev )
 end
 
 function actionSetBrightness( level, dev )
+	D("actionSetBrightness(%1,%2)", level, dev)
 	level = tonumber( level or 0 ) or 0
 	if level < 0 then level = 0 elseif level > 100 then level = 100 end
-	if level == 0 then
+	local b = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
+	if level == 0 then -- cover always sets brightness
 		return actionSetState( "0", dev )
 	end
+
 	setVar( DIMMERSID, "LoadLevelTarget", tostring(level), dev )
-	if getVarNumeric( "Status", 0, dev, SWITCHSID ) == 0 then
+
+	if b == "Cover" then
+		rampStart( dev )
+		return true
+	end
+
+	local st = getVarNumeric( "Status", 0, dev, SWITCHSID )
+	if level > 0 and st == 0 then
 		setVar( SWITCHSID, "Target", 1, dev )
 		setVar( VSSID, "Target", 1, dev )
 		setVar( SWITCHSID, "Status", 1, dev )
 		setVar( VSSID, "Status", 1, dev )
+	elseif level == 0 and st ~= 0 then
+		setVar( SWITCHSID, "Target", 0, dev )
+		setVar( VSSID, "Target", 0, dev )
+		setVar( SWITCHSID, "Status", 0, dev )
+		setVar( VSSID, "Status", 0, dev )
 	end
 	local force = getVarNumeric( "AlwaysUpdateStatus", 0, dev, MYSID ) ~= 0
 	setVar( DIMMERSID, "LoadLevelStatus", tostring(level), dev, force )
@@ -447,6 +521,28 @@ function actionToggleState( dev )
 	else
 		actionSetState( (t~=0) and 0 or 1, dev )
 	end
+	return true
+end
+
+function actionWCUp( pdev )
+	D("actionWCUp(%1)", pdev )
+	setVar( DIMMERSID, "LoadLevelTarget", 100, pdev )
+	setVar( SWITCHSID, "Target", 1, pdev )
+	rampStart( pdev )
+	return true
+end
+
+function actionWCDown( pdev )
+	D("actionWCUp(%1)", pdev )
+	setVar( DIMMERSID, "LoadLevelTarget", 0, pdev )
+	setVar( SWITCHSID, "Target", 0, pdev )
+	rampStart( pdev )
+	return true
+end
+
+function actionWCStop( pdev )
+	D("actionWCStop(%1)", pdev)
+	rampStop( pdev )
 	return true
 end
 
@@ -643,7 +739,7 @@ end
 -- tasks that need to be run and when, and try to stay on schedule. This
 -- keeps us light on resources: typically one system timer only for any
 -- number of devices.
-local functions = { [tostring(resetSwitch)]='resetSwitch' }
+local functions = { [tostring(resetSwitch)]='resetSwitch', [tostring(rampRun)]='rampRun' }
 function tick(p)
 	D("tick(%1) pluginDevice=%2", p, pluginDevice)
 	local stepStamp = tonumber(p,10)

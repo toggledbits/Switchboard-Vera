@@ -134,6 +134,28 @@
 		</action>
 
 		<action>
+			<serviceId>urn:upnp-org:serviceId:WindowCovering1</serviceId>
+			<name>Up</name>
+			<run>
+				return SwitchboardPlugin.actionWCUp( lul_device )
+			</run>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:WindowCovering1</serviceId>
+			<name>Down</name>
+			<run>
+				return SwitchboardPlugin.actionWCDown( lul_device )
+			</run>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:WindowCovering1</serviceId>
+			<name>Stop</name>
+			<run>
+				return SwitchboardPlugin.actionWCStop( lul_device )
+			</run>
+		</action>
+
+		<action>
 			<serviceId>urn:micasaverde-com:serviceId:HaDevice1</serviceId>
 			<name>ToggleState</name>
 			<run>
