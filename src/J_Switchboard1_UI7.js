@@ -13,9 +13,9 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-	var pluginVersion = "1.4develop-19199";
+	var pluginVersion = "1.4develop-19200";
 
-	var _UIVERSION = 19199; /* must agree with L_Switchboard1.lua */
+	var _UIVERSION = 19200; /* must agree with L_Switchboard1.lua */
 
 	/* unique identifier for this plugin... */
 	var uuid = 'fabe8224-2341-11e9-8762-74d4351650de'; /* 2019-01-28 Switchboard */
@@ -384,7 +384,7 @@ var Switchboard1_UI7 = (function(api, $) {
 					childMenu.append( jQuery( '<option/>' ).val( ch ).text( data[ch].name || ch ) );
 					hasOne = true;
 				}
-				if ( 0 === lx.length ) {
+				if ( lx.length > 0 ) {
 					jQuery( 'div#tail button#addchild' ).prop( 'disabled', false );
 				}
 			}).fail( function( jqXHR ) {
