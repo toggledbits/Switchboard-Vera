@@ -13,7 +13,7 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-	var pluginVersion = "1.4develop-19200";
+	var pluginVersion = "1.4";
 
 	var _UIVERSION = 19200; /* must agree with L_Switchboard1.lua */
 
