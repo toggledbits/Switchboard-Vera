@@ -11,10 +11,10 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.4"
+local _PLUGIN_VERSION = "1.5develop-19223"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
-local _CONFIGVERSION = 19098
+local _CONFIGVERSION = 19223
 local _UIVERSION = 19200
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
@@ -156,8 +156,7 @@ local function getVarNumeric( name, dflt, dev, sid )
 	assert( sid ~= nil )
 	local s = luup.variable_get( sid, name, dev ) or ""
 	if s == "" then return dflt end
-	s = tonumber(s)
-	return (s == nil) and dflt or s
+	return tonumber(s) or dflt
 end
 
 -- Schedule a timer tick for a future (absolute) time. If the time is sooner than
@@ -260,20 +259,11 @@ local function initSwitch( switch )
 	local s = getVarNumeric( "Version", 0, switch, MYSID )
 	if s == 0 then
 		L("Initializing new child switch %1", switch)
-		initVar( "ImpulseTime", "0", switch, MYSID )
-		initVar( "ImpulseResetTime", "0", switch, MYSID )
-		initVar( "AlwaysUpdateStatus", "0", switch, MYSID )
-
 		initVar( "Target", "0", switch, SWITCHSID )
 		initVar( "Status", "0", switch, SWITCHSID )
 
-		initVar( "Target", "0", switch, VSSID )
-		initVar( "Status", "0", switch, VSSID )
-		initVar( "Text1", "Text1", switch, VSSID )
-		initVar( "Text2", "Text2", switch, VSSID )
-
-		local b = luup.variable_get( MYSID, "Behavior", switch )
-		if not dfMap[b] then
+		local b = luup.variable_get( MYSID, "Behavior", switch ) or ""
+		if b == "" or not dfMap[b] then
 			b = "Binary"
 			luup.variable_set( MYSID, "Behavior", "Binary", switch )
 			luup.attr_set('category_num', "3", switch)
@@ -281,14 +271,23 @@ local function initSwitch( switch )
 			luup.attr_set( 'manufacturer', DEV_MFG, switch )
 			luup.attr_set( 'model', DEV_MODEL, switch )
 		end
-		if b == "Dimmer" then
+		if b == "Binary" or b == "TriState" then
+			initVar( "ImpulseTime", "0", switch, MYSID )
+			initVar( "ImpulseResetTime", "0", switch, MYSID )
+			initVar( "AlwaysUpdateStatus", "0", switch, MYSID )
+			-- Old VSwitch states
+			initVar( "Target", "0", switch, VSSID )
+			initVar( "Status", "0", switch, VSSID )
+			initVar( "Text1", "Text1", switch, VSSID )
+			initVar( "Text2", "Text2", switch, VSSID )
+		elseif b == "Dimmer" then
 			initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
 			initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
 			initVar( "LoadLevelLast", 100, switch, DIMMERSID )
 		elseif b == "Cover" then
 			initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
 			initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
-			initVar( "RampRatePerSecond", 5, switch, DIMMERSID )
+			initVar( "RampRatePerSecond", 5, switch, MYSID )
 		end
 
 		luup.variable_set( MYSID, "Version", _CONFIGVERSION, switch )
@@ -312,6 +311,15 @@ local function initSwitch( switch )
 			b = "Dimmer"
 		end
 		luup.variable_set( MYSID, "Behavior", b, switch )
+	end
+
+	if s < 19223 then
+		local b = luup.variable_get( MYSID, "Behavior", switch )
+		if b == "Cover" then
+			-- Before 19223 initialized wrong SID
+			initVar( "RampRatePerSecond", 5, switch, MYSID )
+			luup.variable_set( DIMMERSID, "RampRatePerSecond", nil, switch ) -- deletes on newer firmware
+		end
 	end
 
 	setVar( MYSID, "Version", _CONFIGVERSION, switch )
@@ -380,8 +388,7 @@ local function rampRun( pdev, taskid )
 end
 
 local function rampStart( pdev )
-	local rate = math.floor( getVarNumeric( "RampRatePerSecond", 5, pdev, MYSID ) )
-	if rate == 0 then
+	if getVarNumeric( "RampRatePerSecond", 5, pdev, MYSID ) == 0 then
 		-- Special config: if ramp rate is 0, just go right to the target level.
 		local target = getVarNumeric( "LoadLevelTarget", 0, pdev, DIMMERSID )
 		setVar( DIMMERSID, "LoadLevelStatus", target, pdev )
