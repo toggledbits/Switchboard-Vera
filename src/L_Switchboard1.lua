@@ -11,7 +11,7 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.5"
+local _PLUGIN_VERSION = "1.6develop-19239"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19223
@@ -716,20 +716,23 @@ function startPlugin( pdev )
 
 	-- More inits
 	if isOpenLuup then
-		local loader = require "openLuup.loader"
-		if loader.find_file == nil then
-			gatewayStatus( "openLuup upgrade required; must be 2018.11.21 or higher", pdev )
-			L{level=1,msg="Your openLuup needs to be 2018.11.21 or higher; please update."}
-			luup.set_failure( 1, pdev )
-			return false, "Please update to 2018.11.21 or higher.", _PLUGIN_NAME
-		end
-		if not ( loader.find_file( "D_BinaryLight1.xml" ) and
-				loader.find_file( "D_BinaryLight1.json" )
-				) then
-			gatewayStatus( "Incomplete installation; see log for details", pdev )
-			L{level=1,msg="You have not completed the install of the supplemental files for openLuup. Please see the README file at https://github.com/toggledbits/Switchboard-Vera/blob/master/README.md"}
-			luup.set_failure( 1, pdev )
-			return false, "Incomplete installation; see log for details", _PLUGIN_NAME
+		local vfs = require "openLuup.virtualfilesystem"
+		if not vfs.attributes( "built-in/D_BinaryLight1.xml" ) then
+			local loader = require "openLuup.loader"
+			if loader.find_file == nil then
+				gatewayStatus( "openLuup upgrade required; must be 2018.11.21 or higher", pdev )
+				L{level=1,msg="Your openLuup needs to be 2018.11.21 or higher; please update."}
+				luup.set_failure( 1, pdev )
+				return false, "Please update to 2018.11.21 or higher.", _PLUGIN_NAME
+			end
+			if not ( loader.find_file( "D_BinaryLight1.xml" ) and
+					loader.find_file( "D_BinaryLight1.json" )
+					) then
+				gatewayStatus( "Incomplete installation; see log for details", pdev )
+				L{level=1,msg="A required device file is missing. openLuup versions 2019.06.02 and above have this built in, so if upgrading your openLuup is an option, this is your best bet. Otherwise, install the supplemental files for openLuup documented in the Switchboard README file at https://github.com/toggledbits/Switchboard-Vera/blob/master/README.md"}
+				luup.set_failure( 1, pdev )
+				return false, "Incomplete installation; see log for details", _PLUGIN_NAME
+			end
 		end
 	end
 
@@ -903,14 +906,13 @@ function requestHandler( lul_request, lul_parameters, lul_outputformat )
 		if isOpenLuup then
 			-- For openLuup, only show device types for resources that are installed
 			local loader = require "openLuup.loader"
-			if loader.find_file ~= nil then
-				for k,v in pairs( dfMap ) do
-					if loader.find_file( v.device_file ) then
-						r[k] = v
-					end
+			local vfs = require "openLuup.virtualfilesystem"
+			for k,v in pairs( dfMap ) do
+				if vfs.attributes( "built-in/" .. v.device_file ) then
+					r[k] = v
+				elseif loader.find_file ~= nil and loader.find_file( v.device_file ) then
+					r[k] = v
 				end
-			else
-				L{level=1,msg="PLEASE UPGRADE YOUR OPENLUUP TO 181122 OR HIGHER FOR FULL SUPPORT OF SITESENSOR VIRTUAL DEVICES"}
 			end
 		else
 			r = dfMap
