@@ -26,14 +26,22 @@
 			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
 			<name>AddSwitch</name>
 			<job>
-				return SwitchboardPlugin.jobAddSwitch( lul_settings.Count or "1", lul_device )
+				return SwitchboardPlugin.jobAddChild(
+					"Binary",
+					nil,
+					lul_settings.Count or "1", 
+					lul_device )
 			</job>
 		</action>
 		<action>
 			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
 			<name>AddChild</name>
 			<job>
-				return SwitchboardPlugin.jobAddChild( lul_settings.DeviceType, lul_device )
+				return SwitchboardPlugin.jobAddChild( 
+					lul_settings.DeviceType, 
+					lul_settings.Name,
+					lul_settings.Count or "1",
+					lul_device )
 			</job>
 		</action>
 		<action>

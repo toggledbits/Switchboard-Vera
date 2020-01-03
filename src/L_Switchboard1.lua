@@ -11,11 +11,11 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.6develop-19239"
+local _PLUGIN_VERSION = "1.6develop-19270"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
-local _CONFIGVERSION = 19223
-local _UIVERSION = 19200
+local _CONFIGVERSION = 19270
+local _UIVERSION = 19270
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
@@ -23,7 +23,7 @@ local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
 local SWITCHSID = "urn:upnp-org:serviceId:SwitchPower1"
 local VSSID = "urn:upnp-org:serviceId:VSwitch1"
 local DIMMERSID = "urn:upnp-org:serviceId:Dimming1"
-local HADSID = "urn:micasaverde-com:serviceId:HaDevice1"
+-- local HADSID = "urn:micasaverde-com:serviceId:HaDevice1"
 
 local DEV_MFG = "rigpapa"
 local DEV_MODEL = "Switchboard Virtual Binary Switch"
@@ -109,7 +109,7 @@ local function D(msg, ...)
 end
 
 local function checkVersion(dev)
-	local ui7Check = luup.variable_get(MYSID, "UI7Check", dev) or ""
+	local ui7Check = getVar( "UI7Check", "", dev, MYSID )
 	if isOpenLuup then
 		return true
 	end
@@ -149,14 +149,17 @@ local function setVar( sid, name, val, dev, force )
 	return false, s
 end
 
--- Get numeric variable, or return default value if not set or blank
-local function getVarNumeric( name, dflt, dev, sid )
+local function getVar( name, dflt, dev, sid )
 	assert( dev ~= nil )
 	assert( name ~= nil )
 	assert( sid ~= nil )
 	local s = luup.variable_get( sid, name, dev ) or ""
-	if s == "" then return dflt end
-	return tonumber(s) or dflt
+	return s == "" and dflt or s
+end
+
+-- Get numeric variable, or return default value if not set or blank
+local function getVarNumeric( name, dflt, dev, sid )
+	return tonumber( getVar( name, dflt, dev, sid ) ) or dflt
 end
 
 -- Schedule a timer tick for a future (absolute) time. If the time is sooner than
@@ -236,7 +239,7 @@ local function prepForNewChildren( )
 			d.device = v
 			d.device_file = luup.attr_get( "device_file", k ) or ""
 			d.device_json = luup.attr_get( "device_json", k ) or "D_BinarySwitch1.json"
-			d.behavior = luup.variable_get( MYSID, "Behavior", k ) or "Binary"
+			d.behavior = getVar( "Behavior", "Binary", k, MYSID )
 			if d.device_file ~= "" then
 				table.insert( existingChildren, d )
 			end
@@ -262,7 +265,7 @@ local function initSwitch( switch )
 		initVar( "Target", "0", switch, SWITCHSID )
 		initVar( "Status", "0", switch, SWITCHSID )
 
-		local b = luup.variable_get( MYSID, "Behavior", switch ) or ""
+		local b = getVar( "Behavior", "", switch, MYSID ) -- special default
 		if b == "" or not dfMap[b] then
 			b = "Binary"
 			luup.variable_set( MYSID, "Behavior", "Binary", switch )
@@ -275,6 +278,9 @@ local function initSwitch( switch )
 			initVar( "ImpulseTime", "0", switch, MYSID )
 			initVar( "ImpulseResetTime", "0", switch, MYSID )
 			initVar( "AlwaysUpdateStatus", "0", switch, MYSID )
+			if b == "TriState" then
+				initVar( "TimerResetState", "", switch, MYSID )
+			end
 			-- Old VSwitch states
 			initVar( "Target", "0", switch, VSSID )
 			initVar( "Status", "0", switch, VSSID )
@@ -313,12 +319,21 @@ local function initSwitch( switch )
 		luup.variable_set( MYSID, "Behavior", b, switch )
 	end
 
+	local b = getVar( "Behavior", "Binary", switch, MYSID )
+
 	if s < 19223 then
-		local b = luup.variable_get( MYSID, "Behavior", switch )
 		if b == "Cover" then
 			-- Before 19223 initialized wrong SID
 			initVar( "RampRatePerSecond", 5, switch, MYSID )
 			luup.variable_set( DIMMERSID, "RampRatePerSecond", nil, switch ) -- deletes on newer firmware
+		end
+	end
+
+	if s < 19270 then
+		if b == "TriState" then
+			initVar( "TimerResetState", "", switch, MYSID )
+		else
+			luup.variable_set( MYSID, "TimerResetState", nil, switch ) -- delete (for recent firmware)
 		end
 	end
 
@@ -348,6 +363,8 @@ end
 
 resetSwitch = function( switch, taskid )
 	D("resetSwitch(%1,%2)", switch, taskid)
+	local behavior = getVar( "Behavior", "Binary", switch, MYSID )
+	local offState = (behavior == "TriState") and getVar( "TimerResetState", "0", switch, MYSID ) or "0"
 	local resetTime = getVarNumeric( "ImpulseResetTime", 0, switch, MYSID )
 	local now = os.time()
 	D("resetSwitch() reset time %1 now %2", resetTime, now)
@@ -355,13 +372,12 @@ resetSwitch = function( switch, taskid )
 		-- Early call, we're not there yet.
 		D("resetSwitch() early call, deferring to %1", resetTime)
 		scheduleTick( taskid, resetTime )
-	elseif resetTime == 0 or now >= resetTime then
+	elseif resetTime ~= 0 then
 		-- Use action to reset state.
-		D("resetSwitch() resetting switch")
-		luup.call_action( SWITCHSID, "SetTarget", { newTargetState="0" }, switch )
+		D("resetSwitch() resetting switch offState=%1", offState)
+		luup.call_action( SWITCHSID, "SetTarget", { newTargetValue=offState }, switch )
 	end
 end
-
 
 local function rampRun( pdev, taskid )
 	local level = getVarNumeric( "LoadLevelStatus", 0, pdev, DIMMERSID )
@@ -413,42 +429,41 @@ end
 --]]
 
 function actionSetState( state, dev )
-	D("actionSetState(%1,%2)",state,dev)
+	D("actionSetState(%1,%2)", state, dev)
 	-- Switch on/off
-	local behavior = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
+	local behavior = getVar( "Behavior", "Binary", dev, MYSID )
 	local status
 	if tostring(state) == "2" and behavior == "TriState" then -- tri-state
 		status = "2"
 	else
-		if type(state) == "string" then state = ( tonumber(state) or 0 ) ~= 0
-		elseif type(state) == "number" then state = state ~= 0 end
-		local invert = getVarNumeric( "ReverseOnOff", 0, dev, HADSID) ~= 0
-		if invert then status = not state else status = state end
-		state = state and "1" or "0"
+		if type(state) == "string" then status = ( tonumber(state) or 0 ) ~= 0
+		elseif type(state) == "number" then status = state ~= 0 end
 		status = status and "1" or "0"
 	end
-	D("actionSetState() state=%1, status=%2", state, status)
+	D("actionSetState() input state=%1, target status=%2", state, status)
 
-	luup.variable_set( SWITCHSID, "Target", state, dev )
+	luup.variable_set( SWITCHSID, "Target", status, dev )
 
-	-- For window covering, set target level and ramp.
+	-- For window covering, set target level and ramp. Status us handled by ramp.
 	if behavior == "Cover" then
-		setVar( DIMMERSID, "LoadLevelTarget", state=="0" and 0 or 100, dev )
+		setVar( DIMMERSID, "LoadLevelTarget", status=="0" and 0 or 100, dev )
 		rampStart( dev )
 		return true
 	end
 
-	luup.variable_set( VSSID, "Target", state, dev )
+	luup.variable_set( VSSID, "Target", status, dev )
 	local force = getVarNumeric( "AlwaysUpdateStatus", 0, dev, MYSID ) ~= 0
 	local changed = setVar( SWITCHSID, "Status", status, dev, force )
 	setVar( VSSID, "Status", status, dev, force )
 
-	if status == "0" then
-		-- Turn off
+	if status ~= "1" then
+		-- Clear timer task
 		D("actionSetState() clearing impulse task")
 		scheduleTick( "impulse"..dev, 0 )
 		setVar( MYSID, "ImpulseResetTime", "0", dev )
-		-- Dimmer?
+	end
+	if status == "0" then
+		-- Turn off
 		if behavior == "Dimmer" then
 			if changed then
 				-- Transition on->off, save current brightness.
@@ -457,9 +472,9 @@ function actionSetState( state, dev )
 			end
 			setVar( DIMMERSID, "LoadLevelStatus", 0, dev, force )
 		end
-	elseif changed then
+	elseif status == "1" and changed then
 		-- Dimmer? If transition off->on, restore saved brightness
-		if behavior == "Dimmer" and changed then
+		if behavior == "Dimmer" then
 			local brightness = luup.variable_get( DIMMERSID, "LoadLevelLast", dev ) or 100
 			setVar( DIMMERSID, "LoadLevelTarget", brightness, dev, force )
 			setVar( DIMMERSID, "LoadLevelStatus", brightness, dev, force )
@@ -481,7 +496,7 @@ function actionSetBrightness( level, dev )
 	D("actionSetBrightness(%1,%2)", level, dev)
 	level = tonumber( level or 0 ) or 0
 	if level < 0 then level = 0 elseif level > 100 then level = 100 end
-	local b = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
+	local b = getVar( "Behavior", "Binary", dev, MYSID )
 	if level == 0 then -- cover always sets brightness
 		return actionSetState( "0", dev )
 	end
@@ -513,7 +528,7 @@ end
 function actionToggleState( dev )
 	D("actionToggleState(%1)", dev)
 	local t = getVarNumeric( "Target", 0, dev, SWITCHSID )
-	local b = luup.variable_get( MYSID, "Behavior", dev ) or "Binary"
+	local b = getVar( "Behavior", "Binary", dev, MYSID )
 	D("actionToggleState() b=%1, target=%2", b, t)
 	if "TriState" == b then
 		-- TriState rolls On->Void->Off->Void->On...
@@ -564,11 +579,13 @@ function actionSetVisibility( switch, vis, pdev ) -- luacheck: ignore 212
 	luup.attr_set( 'invisible', (tostring(vis)~="0") and "0" or "1", switch )
 end
 
-function jobAddSwitch( count, pdev )
+function jobAddChild( ctype, cname, count, pdev )
 	assert(luup.devices[pdev].device_type == MYTYPE)
-	count = tonumber(count) or 1
-	L("Adding %1 children", count)
-	gatewayStatus( "Creating children. Please hard-refresh your browser!" )
+	assert(dfMap[ctype])
+	local df = dfMap[ctype]
+	count = math.min( 16, math.max( 1, tonumber(count) or 1 ) )
+	L("Adding %1 children %2 (type %2)", count, df.name, ctype)
+	gatewayStatus( "Creating child. Please hard-refresh your browser!" )
 	local ptr,children = prepForNewChildren()
 	local id = 0
 	for _,d in ipairs( children ) do
@@ -577,38 +594,22 @@ function jobAddSwitch( count, pdev )
 	end
 	for _=1,count do
 		id = id + 1
-		luup.chdev.append( pdev, ptr, id, "Virtual Switch "..id, "", "D_BinaryLight1.xml", "", "", false )
+		local vv = { MYSID .. ",Behavior=" .. ctype }
+		table.insert( vv, ",device_json=" .. df.device_json )
+		table.insert( vv, ",category_num=" .. df.category or 3 )
+		table.insert( vv, ",manufacturer=" .. DEV_MFG )
+		table.insert( vv, ",model=Switchboard Virtual " .. df.name )
+		if df.subcategory_num then
+			table.insert( vv, ",subcategory_num=" .. df.subcategory )
+		end
+		local nn = cname == nil and ( "Virtual " .. df.name .. " " .. id ) or 
+			( tostring(cname) .. ( count > 1 and tostring(id) or "" ) )
+		luup.chdev.append( pdev, ptr, id, nn, "",
+			df.device_file,
+			"",
+			table.concat( vv, "\n" ),
+			false )
 	end
-	luup.chdev.sync( pdev, ptr )
-	return 4,0
-end
-
-function jobAddChild( ctype, pdev )
-	assert(luup.devices[pdev].device_type == MYTYPE)
-	assert(dfMap[ctype])
-	local df = dfMap[ctype]
-	L("Adding %1 child (type %2)", df.name, ctype)
-	gatewayStatus( "Creating child. Please hard-refresh your browser!" )
-	local ptr,children = prepForNewChildren()
-	local id = 0
-	for _,d in ipairs( children ) do
-		local did = tonumber(d.device.id) or 0
-		if did > id then id = did end
-	end
-	id = id + 1
-	local vv = { MYSID .. ",Behavior=" .. ctype }
-	table.insert( vv, ",device_json=" .. df.device_json )
-	table.insert( vv, ",category_num=" .. df.category or 3 )
-	table.insert( vv, ",manufacturer=" .. DEV_MFG )
-	table.insert( vv, ",model=Switchboard Virtual " .. df.name )
-	if df.subcategory_num then
-		table.insert( vv, ",subcategory_num=" .. df.subcategory )
-	end
-	luup.chdev.append( pdev, ptr, id, "Virtual "..df.name.." "..id, "",
-		df.device_file,
-		"",
-		table.concat( vv, "\n" ),
-		false )
 	luup.chdev.sync( pdev, ptr )
 	return 4,0
 end
@@ -772,7 +773,6 @@ function tick(p)
 		if t ~= "_plugin" and v.when ~= nil and v.when <= now then
 			-- Task is due or past due
 			D("tick() inserting eligible task %1 when %2 now %3", v.id, v.when, now)
-			v.when = nil -- clear time; timer function will need to reschedule
 			table.insert( todo, v )
 		end
 	end
@@ -780,6 +780,7 @@ function tick(p)
 	-- Run the to-do list tasks.
 	D("tick() to-do list is %1", todo)
 	for _,v in ipairs(todo) do
+		v.when = nil -- clear; task will need to reschedule
 		local fname = functions[tostring(v.func)] or tostring(v.func)
 		D("tick() calling %3(%4,%5) for %1 (task %2 %3)", v.owner,
 			(luup.devices[v.owner] or {}).description, fname, v.owner, v.id,

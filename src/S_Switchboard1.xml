@@ -33,17 +33,31 @@
         <action>
             <name>AddSwitch</name>
             <argumentList>
-                <name>Count</name>
-                <direction>in</direction>
-                <relatedStateVariable>A_ARG_TYPE_count</relatedStateVariable>
+				<argument>
+					<name>Count</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_count</relatedStateVariable>
+				</argument>
             </argumentList>
         </action>
         <action>
             <name>AddChild</name>
             <argumentList>
-                <name>DeviceType</name>
-                <direction>in</direction>
-                <relatedStateVariable>A_ARG_TYPE_string</relatedStateVariable>
+				<argument>
+					<name>DeviceType</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_string</relatedStateVariable>
+				</argument>
+				<argument>
+					<name>Name</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_string</relatedStateVariable>
+				</argument>
+				<argument>
+					<name>Count</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_count</relatedStateVariable>
+				</argument>
             </argumentList>
         </action>
         <action>
