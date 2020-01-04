@@ -46,6 +46,13 @@
 		</action>
 		<action>
 			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
+			<name>AdoptVSwitches</name>
+			<job>
+				return SwitchboardPlugin.jobAdoptVSwitches( lul_device )
+			</job>
+		</action>
+		<action>
+			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
 			<name>MasterClear</name>
 			<job>
 				return SwitchboardPlugin.jobMasterClear( lul_device )

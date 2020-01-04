@@ -11,11 +11,11 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.6develop-19270"
+local _PLUGIN_VERSION = "1.6develop-20004"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19270
-local _UIVERSION = 19270
+local _UIVERSION = 20004
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
@@ -108,23 +108,6 @@ local function D(msg, ...)
 	end
 end
 
-local function checkVersion(dev)
-	local ui7Check = getVar( "UI7Check", "", dev, MYSID )
-	if isOpenLuup then
-		return true
-	end
-	if luup.version_branch == 1 and luup.version_major == 7 then
-		if ui7Check == "" then
-			-- One-time init for UI7 or better
-			luup.variable_set( MYSID, "UI7Check", "true", dev )
-		end
-		return true
-	end
-	L({level=1,msg="firmware %1 (%2.%3.%4) not compatible"}, luup.version,
-		luup.version_branch, luup.version_major, luup.version_minor)
-	return false, "Firmware "..luup.version.." is not compatible"
-end
-
 -- Initialize a variable if it does not already exist.
 local function initVar( name, dflt, dev, sid )
 	assert( dev ~= nil, "initVar requires dev" )
@@ -160,6 +143,23 @@ end
 -- Get numeric variable, or return default value if not set or blank
 local function getVarNumeric( name, dflt, dev, sid )
 	return tonumber( getVar( name, dflt, dev, sid ) ) or dflt
+end
+
+local function checkVersion(dev)
+	local ui7Check = getVar( "UI7Check", "", dev, MYSID )
+	if isOpenLuup then
+		return true
+	end
+	if luup.version_branch == 1 and luup.version_major == 7 then
+		if ui7Check == "" then
+			-- One-time init for UI7 or better
+			luup.variable_set( MYSID, "UI7Check", "true", dev )
+		end
+		return true
+	end
+	L({level=1,msg="firmware %1 (%2.%3.%4) not compatible"}, luup.version,
+		luup.version_branch, luup.version_major, luup.version_minor)
+	return false, "Firmware "..luup.version.." is not compatible"
 end
 
 -- Schedule a timer tick for a future (absolute) time. If the time is sooner than
@@ -611,6 +611,44 @@ function jobAddChild( ctype, cname, count, pdev )
 			false )
 	end
 	luup.chdev.sync( pdev, ptr )
+	return 4,0
+end
+
+-- Adopt all stand-alone VSwitch1 plugin virtual switches and convert them to Switchboard binary switches.
+function jobAdoptVSwitches( tdev )
+	L("Adopting old VSwitch plugin switches...")
+	local id = 0
+	for _,d in pairs( luup.devices ) do
+		if d.device_num_parent == tdev then
+			local n = tonumber( d.id )
+			if n and n > id then id = n end
+		end
+	end
+	local count = 0
+	for k,v in pairs( luup.devices ) do
+		if v.device_type == "urn:schemas-upnp-org:device:VSwitch:1" and
+			v.device_num_parent == 0 then
+			L("Adopting %1 (#%2)...", v.description, k)
+			id = id + 1
+			setVar( MYSID, "Behavior", "Binary", k )
+			luup.attr_set( "impl_file", "", k )
+			luup.attr_set( "device_type", dfMap.Binary.device_type, k )
+			luup.attr_set( "device_file", dfMap.Binary.device_file, k )
+			luup.attr_set( "device_json", dfMap.Binary.device_json, k )
+			luup.attr_set( "manufacturer", DEV_MFG, k )
+			luup.attr_set( "model", "Switchboard Virtual " .. dfMap.Binary.name, k )
+			luup.attr_set( "plugin", "", k )
+			luup.attr_set( "altid", id, k )
+			luup.attr_set( "id_parent", tdev, k )
+			count = count + 1
+		end
+	end
+	if count > 0 then
+		L("Adopted %1 VSwitches... reloading Luup...", count)
+		luup.reload()
+	else
+		L{level=2, "Didn't find any VSwitches to adopt."}
+	end
 	return 4,0
 end
 

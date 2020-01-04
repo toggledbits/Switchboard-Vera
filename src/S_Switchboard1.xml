@@ -61,6 +61,10 @@
             </argumentList>
         </action>
         <action>
+            <name>AdoptVSwitches</name>
+            <argumentList/>
+        </action>
+        <action>
             <name>SetSwitchVisibility</name>
             <argumentList>
                 <argument>

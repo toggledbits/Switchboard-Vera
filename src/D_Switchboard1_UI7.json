@@ -31,7 +31,26 @@
 				"x": 1,
 				"y": 4
 			}],
-			"Control": [],
+			"Control": [{
+					"ControlType": "button",
+					"top": 0,
+					"left": 0,
+					"Label": {
+						"lang_tag": "tb_adoptvs",
+						"text": "Adopt Old VSwitch Switches"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 0,
+						"Width": 210,
+						"Height": 30
+					},
+					"Command": {
+						"Service": "urn:toggledbits-com:serviceId:Switchboard1",
+						"Action": "AdoptVSwitches",
+						"Parameters": []
+					}
+			}],
 			"Conditions": []
 		},
 		{
