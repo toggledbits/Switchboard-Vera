@@ -29,7 +29,7 @@
 				return SwitchboardPlugin.jobAddChild(
 					"Binary",
 					nil,
-					lul_settings.Count or "1", 
+					lul_settings.Count or "1",
 					lul_device )
 			</job>
 		</action>
@@ -37,8 +37,8 @@
 			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
 			<name>AddChild</name>
 			<job>
-				return SwitchboardPlugin.jobAddChild( 
-					lul_settings.DeviceType, 
+				return SwitchboardPlugin.jobAddChild(
+					lul_settings.DeviceType,
 					lul_settings.Name,
 					lul_settings.Count or "1",
 					lul_device )
@@ -167,6 +167,14 @@
 			<name>Stop</name>
 			<run>
 				return SwitchboardPlugin.actionWCStop( lul_device )
+			</run>
+		</action>
+
+		<action>
+			<serviceId>urn:micasaverde-com:serviceId:DoorLock1</serviceId>
+			<name>SetTarget</name>
+			<run>
+				return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
 			</run>
 		</action>
 

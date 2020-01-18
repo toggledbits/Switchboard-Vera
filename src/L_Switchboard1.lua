@@ -11,7 +11,7 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.6develop-20004"
+local _PLUGIN_VERSION = "1.6develop-20017"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19270
@@ -44,6 +44,12 @@ local dfMap = {
 			{ name="Tri-state Switch", device_type="urn:schemas-upnp-org:device:BinaryLight:1", device_file="D_BinaryLight1.xml", category=3, subcategory=1, device_json="D_TriStateSwitch1.json", order=3 }
 	, ['Cover'] =
 			{ name="Window Covering", device_type="urn:schemas-micasaverde-com:device:WindowCovering:1", device_file="D_WindowCovering1.xml", category=8, subcategory=1, device_json="D_WindowCovering1.json", order=4 }
+	, ['Lock'] =
+			{ name="Door Lock", device_type="urn:schemas-micasaverde-com:device:DoorLock:1", device_file="D_DoorLock1.xml", category=7, subcategory=0, device_json="D_DoorLock1.json", order=5, service="urn:micasaverde-com:serviceId:DoorLock1" }
+	, ['Valve'] =
+			{ name="Water Valve", device_type="urn:schemas-micasaverde-com:device:WaterValve:1", device_file="D_WaterValve1.xml", category=3, subcategory=7, device_json="D_WaterValve1.json", order=6 }
+	, ['Relay'] =
+			{ name="Relay", device_type="urn:schemas-micasaverde-com:device:Relay:1", device_file="D_Relay1.xml", category=3, subcategory=8, device_json="D_Relay1.json", order=7 }
 }
 
 local function dump(t, seen)
@@ -262,19 +268,17 @@ local function initSwitch( switch )
 	local s = getVarNumeric( "Version", 0, switch, MYSID )
 	if s == 0 then
 		L("Initializing new child switch %1", switch)
-		initVar( "Target", "0", switch, SWITCHSID )
-		initVar( "Status", "0", switch, SWITCHSID )
 
-		local b = getVar( "Behavior", "", switch, MYSID ) -- special default
-		if b == "" or not dfMap[b] then
-			b = "Binary"
+		local b = getVar( "Behavior", "", switch, MYSID ) or "Binary" -- special default
+		local df = dfMap[b] or {}
+		initVar( df.target or "Target", "0", switch, df.service or SWITCHSID )
+		initVar( df.status or "Status", "0", switch, df.service or SWITCHSID )
+		if b == "Binary" or not df then
 			luup.variable_set( MYSID, "Behavior", "Binary", switch )
 			luup.attr_set('category_num', "3", switch)
 			luup.attr_set('subcategory_num', "0", switch)
 			luup.attr_set( 'manufacturer', DEV_MFG, switch )
 			luup.attr_set( 'model', DEV_MODEL, switch )
-		end
-		if b == "Binary" or b == "TriState" then
 			initVar( "ImpulseTime", "0", switch, MYSID )
 			initVar( "ImpulseResetTime", "0", switch, MYSID )
 			initVar( "AlwaysUpdateStatus", "0", switch, MYSID )
@@ -442,7 +446,12 @@ function actionSetState( state, dev )
 	end
 	D("actionSetState() input state=%1, target status=%2", state, status)
 
-	luup.variable_set( SWITCHSID, "Target", status, dev )
+	local df = dfMap[behavior] or {}
+	local targetService = df.service or SWITCHSID
+	local targetVariable = df.target or "Target"
+	local statusVariable = df.status or "Status"
+
+	luup.variable_set( targetService, targetVariable, status, dev )
 
 	-- For window covering, set target level and ramp. Status us handled by ramp.
 	if behavior == "Cover" then
@@ -453,7 +462,7 @@ function actionSetState( state, dev )
 
 	luup.variable_set( VSSID, "Target", status, dev )
 	local force = getVarNumeric( "AlwaysUpdateStatus", 0, dev, MYSID ) ~= 0
-	local changed = setVar( SWITCHSID, "Status", status, dev, force )
+	local changed = setVar( targetService, statusVariable, status, dev, force )
 	setVar( VSSID, "Status", status, dev, force )
 
 	if status ~= "1" then
@@ -527,8 +536,9 @@ end
 
 function actionToggleState( dev )
 	D("actionToggleState(%1)", dev)
-	local t = getVarNumeric( "Target", 0, dev, SWITCHSID )
 	local b = getVar( "Behavior", "Binary", dev, MYSID )
+	local df = dfMap[b]
+	local t = getVarNumeric( df.target or "Target", 0, dev, df.service or SWITCHSID )
 	D("actionToggleState() b=%1, target=%2", b, t)
 	if "TriState" == b then
 		-- TriState rolls On->Void->Off->Void->On...
@@ -599,10 +609,10 @@ function jobAddChild( ctype, cname, count, pdev )
 		table.insert( vv, ",category_num=" .. df.category or 3 )
 		table.insert( vv, ",manufacturer=" .. DEV_MFG )
 		table.insert( vv, ",model=Switchboard Virtual " .. df.name )
-		if df.subcategory_num then
+		if df.subcategory then
 			table.insert( vv, ",subcategory_num=" .. df.subcategory )
 		end
-		local nn = cname == nil and ( "Virtual " .. df.name .. " " .. id ) or 
+		local nn = cname == nil and ( "Virtual " .. df.name .. " " .. id ) or
 			( tostring(cname) .. ( count > 1 and tostring(id) or "" ) )
 		luup.chdev.append( pdev, ptr, id, nn, "",
 			df.device_file,
