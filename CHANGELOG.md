@@ -1,6 +1,6 @@
 # Switchboard -- Change Log
 
-## Version 1.6 (development)
+## Version 1.6 (released)
 
 * Add Lock, Water Valve, and Relay virtual devices. Note that lock has a separate service for `Target` and `Status` from all other binary on/off devices &mdash; it does not use `urn:upnp-org:serviceId:SwitchPower1`, but rather `urn:micasaverde-com:serviceId:DoorLock1`.
 * Make post-timer return state configurable via `TimerResetState`; this enables TriState virtual switches to return to off or void.
