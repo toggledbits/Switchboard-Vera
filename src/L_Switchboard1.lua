@@ -11,7 +11,7 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.6"
+local _PLUGIN_VERSION = "1.7develop-20085"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19270
@@ -465,7 +465,9 @@ function actionSetState( state, dev )
 	local changed = setVar( targetService, statusVariable, status, dev, force )
 	setVar( VSSID, "Status", status, dev, force )
 
-	if status ~= "1" then
+	local resetState = getVar( "TimerResetState", "0", dev, MYSID )
+
+	if status == resetState then
 		-- Clear timer task
 		D("actionSetState() clearing impulse task")
 		scheduleTick( "impulse"..dev, 0 )
@@ -481,13 +483,15 @@ function actionSetState( state, dev )
 			end
 			setVar( DIMMERSID, "LoadLevelStatus", 0, dev, force )
 		end
-	elseif status == "1" and changed then
+	elseif status == "1" then
 		-- Dimmer? If transition off->on, restore saved brightness
 		if behavior == "Dimmer" then
 			local brightness = luup.variable_get( DIMMERSID, "LoadLevelLast", dev ) or 100
 			setVar( DIMMERSID, "LoadLevelTarget", brightness, dev, force )
 			setVar( DIMMERSID, "LoadLevelStatus", brightness, dev, force )
 		end
+	end
+	if status ~= resetState and changed then
 		-- Transition to on (or tri-state void) status. Timer may run in any
 		-- status other than "off".
 		local delay = getVarNumeric( "ImpulseTime", 0, dev, MYSID )

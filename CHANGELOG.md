@@ -1,5 +1,9 @@
 # Switchboard -- Change Log
 
+## Version 1.7 (development)
+
+* Tri-state switches will now timer-reset to the `TimerResetState` when set to any state other than that (not just "on" as in 1.6).
+
 ## Version 1.6 (released)
 
 * Add Lock, Water Valve, and Relay virtual devices. Note that lock has a separate service for `Target` and `Status` from all other binary on/off devices &mdash; it does not use `urn:upnp-org:serviceId:SwitchPower1`, but rather `urn:micasaverde-com:serviceId:DoorLock1`.
