@@ -1,0 +1,255 @@
+{
+	"default_icon": "scene_controller_default.png",
+	"state_icons": [],
+	"inScene": "0",
+	"ToggleButton": 1,
+	"Tabs": [{
+			"Label": {
+				"lang_tag": "ui7_tabname_control",
+				"text": "Control"
+			},
+			"Position": "0",
+			"TabType": "flash",
+			"top_navigation_tab": 1,
+			"TopNavigationTab": 1,
+			"ControlGroup": [{
+				"id": 1,
+				"scenegroup": 1
+			},{
+				"id": 2,
+				"scenegroup": 2
+			}],
+			"SceneGroup": [{
+				"id": 1,
+				"top": 0,
+				"left": 0,
+				"x": 1,
+				"y": 4
+			},{
+				"id": 2,
+				"top": 0,
+				"left": 0,
+				"x": 4,
+				"y": 4
+			}],
+			"Control": [{
+					"ControlType": "label",
+					"Label": {
+						"lang_tag": "tb_values",
+						"text": "Labels (comma-separated):"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 10,
+						"Width": 120,
+						"Height": 24
+					}
+				},
+				{
+					"ControlType": "input",
+					"ID": "inplabels",
+					"Display": {
+						"Service": "urn:toggledbits-com:serviceId:Switchboard1",
+						"Variable": "Labels",
+						"Top": 30,
+						"Left": 170,
+						"Width": 320,
+						"Height": 24
+					}
+				},
+				{
+					"ControlType": "button",
+					"top": 0,
+					"left": 0,
+					"Label": {
+						"lang_tag": "tb_setlabels",
+						"text": "Set"
+					},
+					"Display": {
+						"Top": 30,
+						"Left": 510,
+						"Width": 40,
+						"Height": 24
+					},
+					"Command": {
+						"Service": "urn:micasaverde-com:serviceId:SceneControllerLED1",
+						"Action": "SetLight",
+						"Parameters": [{
+							"Name": "newValue",
+							"ID": "inplabels"
+						},{
+							"Name": "Indicator",
+							"Value": "Set$Labels"
+						}]
+					}
+				},
+				{
+					"ControlCode": "swsc_btn1",
+					"ControlGroup": 1,
+					"ControlType": "button",
+					"top": 0,
+					"left": 0,
+					"Label": {
+						"lang_tag": "tb_btn1",
+						"text": "1"
+					},
+					"Display": {
+						"Service": "urn:micasaverde-com:serviceId:SceneController1",
+						"Variable": "sl_SceneActivated",
+						"Value": 1,
+						"Top": 90,
+						"Left": 10,
+						"Width": 32,
+						"Height": 24
+					},
+					"Command": {
+						"Service": "urn:micasaverde-com:serviceId:SceneControllerLED1",
+						"Action": "SetLight",
+						"Parameters": [{
+							"Name": "Indicator",
+							"Value": 1
+						}]
+					}
+				}
+			]
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_settings",
+				"text": "Settings"
+			},
+			"Position": "1",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "simple_device"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_advanced",
+				"text": "Advanced"
+			},
+			"Position": "2",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_device_options",
+				"text": "Device Options"
+			},
+			"Position": "3",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_zwave_options"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_scene_controller_switch_asignment",
+				"text": "Select scenes for device buttons"
+			},
+			"Position": "4",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "scene_controller"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_notifications",
+				"text": "Notifications"
+			},
+			"Position": "5",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_notifications"
+		},
+		{
+			"Label": {
+				"lang_tag": "ui7_device_scenes",
+				"text": "Scenes"
+			},
+			"Position": "6",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "device_scenes"
+		}
+	],
+	"eventList2": [{
+			"id": 1,
+			"label": {
+				"lang_tag": "ui7_scene_controller_button_is_pressed",
+				"text": "A button is pressed"
+			},
+			"serviceId": "urn:micasaverde-com:serviceId:SceneController1",
+			"argumentList": [{
+				"id": 1,
+				"dataType": "ui2",
+				"defaultValue": "",
+				"name": "sl_SceneActivated",
+				"comparisson": "=",
+				"prefix": {
+					"lang_tag": "ui7_scene_controller_which_button_number",
+					"text": "Which button number"
+				},
+				"suffix": {},
+				"HumanFriendlyText": {
+					"lang_tag": "ui7_hft_scene_controller_button_number_is_pressed",
+					"text": "_DEVICE_NAME_: button number _ARGUMENT_VALUE_ is pressed"
+				}
+			}]
+		},
+		{
+			"id": 2,
+			"label": {
+				"lang_tag": "ui7_a_scene_is_deactivated",
+				"text": "A scene is de-activated"
+			},
+			"serviceId": "urn:micasaverde-com:serviceId:SceneController1",
+			"argumentList": [{
+				"id": 1,
+				"dataType": "ui2",
+				"defaultValue": "",
+				"name": "sl_SceneDeactivated",
+				"comparisson": "=",
+				"prefix": {
+					"lang_tag": "ui7_which_scene_number",
+					"text": "Which scene number"
+				},
+				"suffix": {},
+				"HumanFriendlyText": {
+					"lang_tag": "ui7_hft_scene_number_is_deactivated",
+					"text": "_DEVICE_NAME_: scene number _ARGUMENT_VALUE_ is deactivated"
+				}
+			}]
+		},
+		{
+			"id": 3,
+			"label": {
+				"lang_tag": "ui7_battery_level_goes_below",
+				"text": "Battery level goes below"
+			},
+			"serviceId": "urn:micasaverde-com:serviceId:HaDevice1",
+			"argumentList": [{
+				"id": 1,
+				"prefix": {
+					"lang_tag": "ui7_level",
+					"text": "Level"
+				},
+				"dataType": "i4",
+				"name": "BatteryLevel",
+				"comparisson": "<",
+				"minValue": "1",
+				"maxValue": "99",
+				"suffix": {
+					"lang_tag": "ui7_percent_sign",
+					"text": "%"
+				},
+				"HumanFriendlyText": {
+					"lang_tag": "ui7_hft_battery_level_goes_below",
+					"text": "Battery level for _DEVICE_NAME_ goes below _ARGUMENT_VALUE_%"
+				}
+			}]
+		}
+	],
+	"device_type": "urn:schemas-micasaverde-com:device:SceneControllerLED:1"
+}
