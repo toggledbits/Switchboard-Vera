@@ -62,14 +62,14 @@
 			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
 			<name>SetDebug</name>
 			<run>
-				SwitchboardPlugin.actionSetDebug( lul_settings.debug or "0", lul_device )
+				return SwitchboardPlugin.actionSetDebug( lul_settings.debug or "0", lul_device )
 			</run>
 		</action>
 		<action>
 			<serviceId>urn:toggledbits-com:serviceId:Switchboard1</serviceId>
 			<name>SetSwitchVisibility</name>
 			<run>
-				SwitchboardPlugin.actionSetVisibility( lul_settings.DeviceNum, lul_settings.Visibility, lul_device )
+				return SwitchboardPlugin.actionSetVisibility( lul_settings.DeviceNum, lul_settings.Visibility, lul_device )
 			</run>
 		</action>
 		<action>
@@ -175,6 +175,14 @@
 			<name>SetTarget</name>
 			<run>
 				return SwitchboardPlugin.actionSetState( lul_settings.newTargetValue, lul_device )
+			</run>
+		</action>
+
+		<action>
+			<serviceId>urn:micasaverde-com:serviceId:SceneControllerLED1</serviceId>
+			<name>SetLight</name>
+			<run>
+				return SwitchboardPlugin.actionSetLight( lul_device, lul_settings )
 			</run>
 		</action>
 

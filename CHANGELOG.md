@@ -3,6 +3,7 @@
 ## Version 1.7 (development)
 
 * Tri-state switches will now timer-reset to the `TimerResetState` when set to any state other than that (not just "on" as in 1.6).
+* New virtual Scene Controller! Set the `Values` state variable to the (comma-separated) list of button values.
 
 ## Version 1.6 (released)
 

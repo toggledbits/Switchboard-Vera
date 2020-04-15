@@ -7,11 +7,11 @@
 
 module("L_Switchboard1", package.seeall)
 
-local debugMode = false
+local debugMode = true
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.7develop-20085"
+local _PLUGIN_VERSION = "1.7develop-20106"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19270
@@ -23,6 +23,8 @@ local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
 local SWITCHSID = "urn:upnp-org:serviceId:SwitchPower1"
 local VSSID = "urn:upnp-org:serviceId:VSwitch1"
 local DIMMERSID = "urn:upnp-org:serviceId:Dimming1"
+local SCSID = "urn:micasaverde-com:serviceId:SceneController1"
+local SCLEDSID = "urn:micasaverde-com:serviceId:SceneControllerLED1"
 -- local HADSID = "urn:micasaverde-com:serviceId:HaDevice1"
 
 local DEV_MFG = "rigpapa"
@@ -50,6 +52,8 @@ local dfMap = {
 			{ name="Water Valve", device_type="urn:schemas-micasaverde-com:device:WaterValve:1", device_file="D_WaterValve1.xml", category=3, subcategory=7, device_json="D_WaterValve1.json", order=6 }
 	, ['Relay'] =
 			{ name="Relay", device_type="urn:schemas-micasaverde-com:device:Relay:1", device_file="D_Relay1.xml", category=3, subcategory=8, device_json="D_Relay1.json", order=7 }
+	, ['SC'] =
+			{ name="Scene Controller", device_type="urn:schemas-micasaverde-com:device:SceneControllerLED:1", device_file="D_SceneControllerLED1.xml", category=14, device_json="D_SwitchboardSCTemplate1.json", order=8 }
 }
 
 local function dump(t, seen)
@@ -114,6 +118,36 @@ local function D(msg, ...)
 	end
 end
 
+local function getInstallPath()
+	if not installPath then
+		installPath = "/etc/cmh-ludl/" -- until we know otherwise
+		if isOpenLuup then
+			local loader = require "openLuup.loader"
+			if loader.find_file then
+				installPath = loader.find_file( "L_Reactor.lua" ):gsub( "L_Reactor.lua$", "" )
+			else
+				installPath = "./" -- punt
+			end
+		end
+	end
+	return installPath
+end
+
+local function file_exists( fn )
+	local f = io.open( fn, "r" )
+	if f then f:close() return true end
+	return false
+end
+
+local function split( str, sep )
+	sep = sep or ","
+	local arr = {}
+	if str == nil or #str == 0 then return arr, 0 end
+	local rest = string.gsub( str or "", "([^" .. sep .. "]*)" .. sep, function( m ) table.insert( arr, m ) return "" end )
+	table.insert( arr, rest )
+	return arr, #arr
+end
+
 -- Initialize a variable if it does not already exist.
 local function initVar( name, dflt, dev, sid )
 	assert( dev ~= nil, "initVar requires dev" )
@@ -149,6 +183,11 @@ end
 -- Get numeric variable, or return default value if not set or blank
 local function getVarNumeric( name, dflt, dev, sid )
 	return tonumber( getVar( name, dflt, dev, sid ) ) or dflt
+end
+
+local function deleteVar( sid, name, dev )
+	assert( sid and name and dev )
+	luup.variable_set( sid, name, nil, dev )
 end
 
 local function checkVersion(dev)
@@ -261,6 +300,106 @@ local function prepForNewChildren( )
 	return ptr, existingChildren
 end
 
+local function clone( t )
+	local r = {}
+	for k,v in pairs( t ) do
+		if type(v) == "table" then
+			r[k] = clone( v )
+		else
+			r[k] = v
+		end
+	end
+	return r
+end
+
+local function makeSCTemplate( tdev )
+	D("makeSCTemplate(%1)", tdev)
+	local valueList = split( getVar( "Labels", "1", tdev, MYSID ), "," )
+	local longlen
+	for _,v in ipairs( valueList ) do
+		if not longlen or #v > longlen then longlen = #v end
+	end
+	-- Change? Increase/decrease?
+	luup.variable_set( SCSID, "NumButtons", #valueList, tdev )
+	local templateName = isOpenLuup and (getInstallPath().."D_SwitchboardSCTemplate1.json") or "/tmp/swbd.json"
+	if not isOpenLuup then
+		os.execute( "pluto-lzo d '" .. getInstallPath() .. "D_SwitchboardSCTemplate1.json.lzo' " .. templateName )
+	end
+	local json = require "dkjson"
+	local f,ferr = io.open( templateName, "r" )
+	if f then
+		local data = json.decode( f:read("*a") )
+		f:close()
+		if not data then
+			L({level=2,msg="Failed to parse %1 (invalid JSON)"}, templateName)
+		end
+		-- Find the button template
+		local buttonTemplate = 0
+		for n,v in pairs( data.Tabs[1].Control ) do
+			if v.ControlCode == "swsc_btn1" then
+				buttonTemplate = n
+				break
+			end
+		end
+		if buttonTemplate == 0 then
+			L({level=2,msg="Failed to locate ControlCode=swsc_btn1 in %1"}, templateName)
+			return false
+		end
+		local bt = data.Tabs[1].Control[buttonTemplate]
+		local top, left = 0, 0
+		local btnMargin = getVarNumeric( "ButtonMargin", 8, tdev, MYSID )
+		local height = getVarNumeric( "ButtonHeight", 0, tdev, MYSID ) -- 0=dynamic
+		if height == 0 then
+			height = 24
+			if longlen > 12 then
+				longlen = math.ceil( longlen / 2 )
+				height = height * 2 
+			end
+		end
+		local width = getVarNumeric( "ButtonWidth", 0, tdev, MYSID ) -- 0=dynamic
+		if width == 0 then width = longlen * 8 + getVarNumeric( "ButtonPadding", 32, tdev, MYSID ) end
+		for n,v in ipairs( valueList ) do
+			local newButton = clone( bt )
+			newButton.ControlCode = "swsc_btn" .. n
+			newButton.Label = { lang_tag = "tb_btn" .. n, text = v }
+			local x = left * ( width + btnMargin ) + bt.Display.Left
+			if (x + width) > 560 then
+				left = 0
+				top = top + 1
+				x = bt.Display.Left
+			end
+			local y = top * ( height + btnMargin ) + bt.Display.Top
+			newButton.top = top
+			newButton.left = left
+			newButton.Display.Top = y
+			newButton.Display.Left = x
+			newButton.Display.Width = width
+			newButton.Display.Height = height
+			newButton.Display.Service = MYSID
+			newButton.Display.Variable = "Active"..n
+			newButton.Display.Value = 1
+			newButton.Command.Parameters[1].Value = n
+			D("makeSCTemplate() newButton=%1", newButton)
+			table.insert( data.Tabs[1].Control, newButton )
+			left = left + 1
+		end
+		table.remove( data.Tabs[1].Control, buttonTemplate )
+		local newfn = "D_SwitchboardSC_" .. tdev .. ".json"
+		f,ferr = io.open( getInstallPath() .. newfn, "w" )
+		if f then
+			f:write( json.encode( data, { indent=true } ) )
+			f:close()
+			luup.attr_set( "device_json", newfn, tdev )
+			return true
+		else
+			L({level=2,msg="Failed to open static JSON target %1: %2"}, newfn, ferr)
+		end
+	else
+		L({level=2,msg="Can't open template static JSON %1: %2"}, templateName, ferr)
+	end
+	return false
+end
+
 -- One-time init for switch
 local function initSwitch( switch )
 	D("initSwitch(%1)", switch)
@@ -271,8 +410,10 @@ local function initSwitch( switch )
 
 		local b = getVar( "Behavior", "", switch, MYSID ) or "Binary" -- special default
 		local df = dfMap[b] or {}
-		initVar( df.target or "Target", "0", switch, df.service or SWITCHSID )
-		initVar( df.status or "Status", "0", switch, df.service or SWITCHSID )
+		if b ~= "SC" or not df then
+			initVar( df.target or "Target", "0", switch, df.service or SWITCHSID )
+			initVar( df.status or "Status", "0", switch, df.service or SWITCHSID )
+		end
 		if b == "Binary" or not df then
 			luup.variable_set( MYSID, "Behavior", "Binary", switch )
 			luup.attr_set('category_num', "3", switch)
@@ -298,6 +439,14 @@ local function initSwitch( switch )
 			initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
 			initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
 			initVar( "RampRatePerSecond", 5, switch, MYSID )
+		elseif b == "SC" then
+			initVar( "Labels", "A,B,C,D", switch, MYSID )
+			initVar( "MultiSelect", "0", switch, MYSID )
+			initVar( "Value", "", switch, MYSID )
+			initVar( "Light", 0, switch, SCLEDSID )
+			initVar( "sl_SceneActivated", "", switch, SCSID )
+			initVar( "sl_SceneDeactivated", "", switch, SCSID )
+			initVar( "Scenes", "", switch, SCSID )
 		end
 
 		luup.variable_set( MYSID, "Version", _CONFIGVERSION, switch )
@@ -353,6 +502,16 @@ local function startSwitches( dev )
 	for _,switch in ipairs( switches ) do
 		D("startSwitches() starting switch %1 (%2)", luup.devices[switch].description, switch)
 		initSwitch( switch )
+
+		if luup.devices[switch].device_type == dfMap.SC.device_type then
+			if not file_exists( getInstallPath() .. "D_SwitchboardSC_" .. switch .. ".json" ) then
+				if makeSCTemplate( switch ) then
+					L({level=2,msg="Reloading Luup for revised UI file for #%1"}, switch)
+					luup.reload()
+				end
+			end
+			--??? add watch for sl_SceneActivated?
+		end
 
 		-- If switch had a pending impulse reset before restart, reschedule it.
 		local reset = getVarNumeric( "ImpulseResetTime", 0, switch, MYSID )
@@ -591,6 +750,7 @@ function actionSetVisibility( switch, vis, pdev ) -- luacheck: ignore 212
 	end
 	L("Setting %1 (%2) visibility %3", luup.devices[switch].description, switch, tostring(vis)~="0")
 	luup.attr_set( 'invisible', (tostring(vis)~="0") and "0" or "1", switch )
+	return true
 end
 
 function jobAddChild( ctype, cname, count, pdev )
@@ -664,6 +824,73 @@ function jobAdoptVSwitches( tdev )
 		L{level=2, "Didn't find any VSwitches to adopt."}
 	end
 	return 4,0
+end
+
+-- Activate scene on Scene Controller
+function actionSetLight( tdev, params )
+	D("actionSetLight(%1,%2)", tdev, params)
+	if luup.devices[tdev].device_type ~= dfMap.SC.device_type then
+		error("Invalid device type for action")
+	end
+	local s = split( getVar( "Labels", "", tdev, MYSID ), "," )
+	if params.Indicator == "Set$Labels" then
+		local newset = params.newValue or ""
+		if newset == "" then newset = "A,B,C,D" end
+		for k in ipairs( s ) do deleteVar( MYSID, "Active"..k, tdev ) end
+		setVar( MYSID, "Value", "", tdev )
+		setVar( SCLEDSID, "Light", 0, tdev )
+		setVar( MYSID, "Labels", newset, tdev )
+		if makeSCTemplate( tdev ) then
+			luup.reload()
+			return true
+		end
+		return false
+	end
+	local n = tonumber( params.Indicator )
+	if n and ( n < 1 or n > #s ) then
+		error("Invalid Indicator -- out of range")
+	end
+	-- Figure out what is currently on or off 
+	local st = {}
+	for k,v in ipairs( s ) do
+		st[v] = { index=k, state=false }
+		st[k] = st[v]
+	end
+	if getVarNumeric( "MultiSelect", 0, tdev, MYSID ) ~= 0 then
+		-- MultiSelect enabled; mark any currently on
+		local currval = split( getVar( "Value", "", tdev, MYSID ) )
+		for _,v in ipairs( currval ) do
+			if st[v] then st[v].state = true end
+		end
+	end
+	D("actionSetLight() current status=%1", st)
+	-- For affected indicator, toggle, on or off.
+	if not params.newValue then
+		st[n].state = not st[n].state
+		st[n].changed = true
+	elseif tostring(params.newValue) == "0" then
+		st[n].changed = st[n].state
+		st[n].state = false
+	else
+		st[n].changed = not st[n].state
+		st[n].state = true
+	end
+	-- Now save
+	local on = {}
+	local bits = 0
+	for k,v in ipairs( s ) do
+		if st[v].state then table.insert( on, v ) end
+		setVar( MYSID, "Active"..k, st[v].state and "1" or "0", tdev )
+		if k < 32 and st[v].state then bits = bits + 2^(k-1) end
+	end
+	setVar( MYSID, "Value", table.concat( on, "," ), tdev )
+	setVar( SCLEDSID, "Light", bits, tdev )
+	if st[n].state then
+		setVar( SCSID, "sl_SceneActivated", n, tdev, true )
+	else
+		setVar( SCSID, "sl_SceneDeactivated", n, tdev, true )
+	end
+	return true
 end
 
 -- Enable or disable debug
