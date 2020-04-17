@@ -19,6 +19,11 @@
 			luup.register_handler("switchboardRequestHandler", "Switchboard")
 			return SwitchboardPlugin.startPlugin( devNum )
 		end
+
+		function reloadLuup( p )
+			luup.log("Switchboard: requesting Luup reload for configuration", 2)
+			luup.reload()
+		end
 	</functions>
 	<startup>startupSwitchboardPlugin</startup>
 	<actionList>

@@ -7,7 +7,7 @@
 
 module("L_Switchboard1", package.seeall)
 
-local debugMode = true
+local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
@@ -382,12 +382,41 @@ local function makeSCTemplate( tdev )
 			D("makeSCTemplate() newButton=%1", newButton)
 			table.insert( data.Tabs[1].Control, newButton )
 			left = left + 1
+
+			-- State icon for label/mode.
+			local icon,i
+			i = getVar( "Icon"..v, "", tdev, MYSID )
+			if i ~= "" then icon = i end
+			if not icon then
+				i = getVar( "Icon"..n, "", tdev, MYSID ) 
+				if i ~= "" then icon = i end
+			end
+			if not icon then
+				i = "sc" .. tdev .. "_" .. v:lower() .. ".png"
+				if file_exists( getInstallPath() .. i ) then icon = i end
+			end
+			if not icon then
+				i = "sc_" .. v:lower() .. ".png"
+				if file_exists( getInstallPath() .. i ) then icon = i end
+			end
+			if icon then
+				local iconurl
+				if not ( isOpenLuup or icon:match("^https?://") ) then
+					os.execute( "ln -sf '" .. getInstallPath() .. icon .. "' /www/cmh/skins/default/icons/")
+					iconurl = "../../../icons/" .. icon
+				else
+					iconurl = icon
+				end
+				data.state_icons = data.state_icons or {}
+				table.insert( data.state_icons, { img=iconurl, conditions={ { service=MYSID, variable="Active"..n, value=1, operator="==" } } } )
+			end
 		end
 		table.remove( data.Tabs[1].Control, buttonTemplate )
 		local newfn = "D_SwitchboardSC_" .. tdev .. ".json"
 		f,ferr = io.open( getInstallPath() .. newfn, "w" )
 		if f then
-			f:write( json.encode( data, { indent=true } ) )
+			local opt = debugMode and { indent=true } or nil
+			f:write( json.encode( data, opt ) )
 			f:close()
 			luup.attr_set( "device_json", newfn, tdev )
 			return true
@@ -507,7 +536,7 @@ local function startSwitches( dev )
 			if not file_exists( getInstallPath() .. "D_SwitchboardSC_" .. switch .. ".json" ) then
 				if makeSCTemplate( switch ) then
 					L({level=2,msg="Reloading Luup for revised UI file for #%1"}, switch)
-					luup.reload()
+					luup.call_delay( 'reloadLuup', 15 )
 				end
 			end
 			--??? add watch for sl_SceneActivated?
@@ -819,7 +848,7 @@ function jobAdoptVSwitches( tdev )
 	end
 	if count > 0 then
 		L("Adopted %1 VSwitches... reloading Luup...", count)
-		luup.reload()
+		luup.call_delay( 'reloadLuup', 15 )
 	else
 		L{level=2, "Didn't find any VSwitches to adopt."}
 	end
@@ -841,10 +870,22 @@ function actionSetLight( tdev, params )
 		setVar( SCLEDSID, "Light", 0, tdev )
 		setVar( MYSID, "Labels", newset, tdev )
 		if makeSCTemplate( tdev ) then
-			luup.reload()
+			luup.call_delay( 'reloadLuup', 5 )
 			return true
 		end
 		return false
+	elseif params.Indicator == "Set$Mask" or params.Indicator == 0 then
+		local newval = tonumber( params.newValue )
+		local t = {}
+		for k=1,#s do
+			local state = ( newval % 2 ) ~= 0
+			if state then table.insert( t, s[k] ) end
+			setVar( MYSID, "Active"..k, state and "1" or "0", tdev )
+			newval = math.floor( newval / 2 )
+		end
+		setVar( MYSID, "Value", table.concat( t, "," ), tdev )
+		setVar( SCLEDSID, "Light", newval, tdev )
+		return true
 	end
 	local n = tonumber( params.Indicator )
 	if n and ( n < 1 or n > #s ) then
