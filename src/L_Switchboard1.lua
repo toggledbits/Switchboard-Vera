@@ -1,6 +1,6 @@
 --[[
 	L_Switchboard1.lua - Core module for Switchboard
-	Copyright 2019 Patrick H. Rigney, All Rights Reserved.
+	Copyright 2019,2020 Patrick H. Rigney, All Rights Reserved.
 	This file is part of the Switchboard for Vera HA controllers.
 --]]
 --luacheck: std lua51,module,read globals luup,ignore 542 611 612 614 111/_,no max line length
@@ -11,7 +11,7 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.7develop-20106"
+local _PLUGIN_VERSION = "1.7"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19270
@@ -886,6 +886,14 @@ function actionSetLight( tdev, params )
 		setVar( MYSID, "Value", table.concat( t, "," ), tdev )
 		setVar( SCLEDSID, "Light", newval, tdev )
 		return true
+	elseif params.Indicator == "Increment" then
+		local n = getVarNumeric( "sl_SceneActivated", 0, tdev, SCSID ) + 1
+		if n > #s then n = 1 end
+		param.Indicator = n
+	elseif params.Indicator == "Decrement" then
+		local n = getVarNumeric( "sl_SceneActivated", 0, tdev, SCSID ) - 1
+		if n < 1 then n = #s end
+		param.Indicator = n
 	end
 	local n = tonumber( params.Indicator )
 	if n and ( n < 1 or n > #s ) then
@@ -906,7 +914,7 @@ function actionSetLight( tdev, params )
 	end
 	D("actionSetLight() current status=%1", st)
 	-- For affected indicator, toggle, on or off.
-	if not params.newValue then
+	if ( params.newValue or "" ) == "" then
 		st[n].state = not st[n].state
 		st[n].changed = true
 	elseif tostring(params.newValue) == "0" then
