@@ -84,6 +84,66 @@
 					}
 				},
 				{
+					"ControlCode": "swsc_singlestate",
+					"ControlType": "button",
+					"top": 0,
+					"left": 0,
+					"Label": {
+						"lang_tag": "tb_mode_single",
+						"text": "Single"
+					},
+					"Display": {
+						"Service": "urn:toggledbits-com:serviceId:Switchboard1",
+						"Variable": "MultiSelect",
+						"Value": 0,
+						"Top": 60,
+						"Left": 10,
+						"Width": 96,
+						"Height": 24
+					},
+					"Command": {
+						"Service": "urn:micasaverde-com:serviceId:SceneController1",
+						"Action": "SetLight",
+						"Parameters": [{
+							"Name": "Indicator",
+							"Value": "Set$Mode"
+						},{
+							"Name": "newValue",
+							"Value": "0"
+						}]
+					}
+				},
+				{
+					"ControlCode": "swsc_multistate",
+					"ControlType": "button",
+					"top": 0,
+					"left": 0,
+					"Label": {
+						"lang_tag": "tb_mode_multi",
+						"text": "Multiple"
+					},
+					"Display": {
+						"Service": "urn:toggledbits-com:serviceId:Switchboard1",
+						"Variable": "MultiSelect",
+						"Value": 1,
+						"Top": 60,
+						"Left": 120,
+						"Width": 96,
+						"Height": 24
+					},
+					"Command": {
+						"Service": "urn:micasaverde-com:serviceId:SceneController1",
+						"Action": "SetLight",
+						"Parameters": [{
+							"Name": "Indicator",
+							"Value": "Set$Mode"
+						},{
+							"Name": "newValue",
+							"Value": "1"
+						}]
+					}
+				},
+				{
 					"ControlCode": "swsc_btn1",
 					"ControlGroup": 1,
 					"ControlType": "button",
@@ -97,7 +157,7 @@
 						"Service": "urn:micasaverde-com:serviceId:SceneController1",
 						"Variable": "sl_SceneActivated",
 						"Value": 1,
-						"Top": 90,
+						"Top": 120,
 						"Left": 10,
 						"Width": 32,
 						"Height": 24

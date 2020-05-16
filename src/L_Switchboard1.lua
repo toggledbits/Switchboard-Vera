@@ -165,7 +165,7 @@ local function setVar( sid, name, val, dev, force )
 	val = (val == nil) and "" or tostring(val)
 	local s = luup.variable_get( sid, name, dev ) or ""
 	-- D("setVar(%1,%2,%3,%4) old value %5", sid, name, val, dev, s )
-	if s ~= val or force then
+	if force or s ~= val then
 		luup.variable_set( sid, name, val, dev )
 		return true, s
 	end
@@ -379,6 +379,7 @@ local function makeSCTemplate( tdev )
 			newButton.Display.Variable = "Active"..n
 			newButton.Display.Value = 1
 			newButton.Command.Parameters[1].Value = n
+			if n > 24 then newButton.ControlGroup = nil end -- not on dashboard
 			D("makeSCTemplate() newButton=%1", newButton)
 			table.insert( data.Tabs[1].Control, newButton )
 			left = left + 1
@@ -874,6 +875,10 @@ function actionSetLight( tdev, params )
 			return true
 		end
 		return false
+	elseif params.Indicator == "Set$Mode" then
+		local newval = tonumber( params.newValue ) or 0
+		setVar( MYSID, "MultiSelect", newval, tdev )
+		return true
 	elseif params.Indicator == "Set$Mask" or params.Indicator == 0 then
 		local newval = tonumber( params.newValue )
 		local t = {}
@@ -886,17 +891,26 @@ function actionSetLight( tdev, params )
 		setVar( MYSID, "Value", table.concat( t, "," ), tdev )
 		setVar( SCLEDSID, "Light", newval, tdev )
 		return true
-	elseif params.Indicator == "Increment" then
+	elseif params.Indicator == "Inc$Mode" then
 		local n = getVarNumeric( "sl_SceneActivated", 0, tdev, SCSID ) + 1
 		if n > #s then n = 1 end
-		param.Indicator = n
-	elseif params.Indicator == "Decrement" then
+		params.Indicator = n
+	elseif params.Indicator == "Dec$Mode" then
 		local n = getVarNumeric( "sl_SceneActivated", 0, tdev, SCSID ) - 1
 		if n < 1 then n = #s end
-		param.Indicator = n
+		params.Indicator = n
 	end
 	local n = tonumber( params.Indicator )
-	if n and ( n < 1 or n > #s ) then
+	if not n and type( params.Indicator ) == "string" then
+		local lv = params.Indicator:lower()
+		for k,v in ipairs(s) do
+			if v:lower() == lv then
+				n = k
+				break
+			end
+		end
+	end
+	if not n or n < 1 or n > #s then
 		error("Invalid Indicator -- out of range")
 	end
 	-- Figure out what is currently on or off 
@@ -910,6 +924,12 @@ function actionSetLight( tdev, params )
 		local currval = split( getVar( "Value", "", tdev, MYSID ) )
 		for _,v in ipairs( currval ) do
 			if st[v] then st[v].state = true end
+		end
+	else
+		-- Single-state mode; set sl_SceneDeactivated for prior if known/set
+		local last = getVarNumeric( "sl_SceneActivated", -1, tdev, MYSID )
+		if last > 0 and last ~= n then
+			setVar( SCSID, 'sl_SceneDeactivated', last, tdev, true )
 		end
 	end
 	D("actionSetLight() current status=%1", st)
