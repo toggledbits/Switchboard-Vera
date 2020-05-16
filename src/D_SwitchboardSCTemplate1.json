@@ -102,7 +102,7 @@
 						"Height": 24
 					},
 					"Command": {
-						"Service": "urn:micasaverde-com:serviceId:SceneController1",
+						"Service": "urn:micasaverde-com:serviceId:SceneControllerLED1",
 						"Action": "SetLight",
 						"Parameters": [{
 							"Name": "Indicator",
@@ -132,7 +132,7 @@
 						"Height": 24
 					},
 					"Command": {
-						"Service": "urn:micasaverde-com:serviceId:SceneController1",
+						"Service": "urn:micasaverde-com:serviceId:SceneControllerLED1",
 						"Action": "SetLight",
 						"Parameters": [{
 							"Name": "Indicator",
