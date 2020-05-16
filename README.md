@@ -96,14 +96,18 @@ An integer from 1 to the number of buttons/labels/modes *or* a string matching o
 The string `"Set$Labels"`|label list|Configures the list of modes/labels for the target VSC. This will cause a Luup reload. You will also need to hard refresh your browser after this action (but I can't make that happen from the plugin).
 The string `"Set$Mode"`|0 or 1|Set single-state mode (`newValue` = 0) or multi-state mode (`newValue` = 1).
 The string `"Set$Mask"`|maskbits|Sets the enabled modes to those having one bits in the (integer) mask bits in `newValue` (1=LSB). For example, the value 5 would turn on modes 1 and 3, and turn off all other modes. This is for multi-state VSCs only. Its use is undefined/unsupported for single-state VSCs.
-The string `"Inc$Mode"`|unused|Set the next ordinal mode (the mode numbered after the current one). If the next mode is off the end of the list, it wraps around and sets the first mode. This action is defined/supported only for single-state VSCs.
-The string `"Dec$Mode"`|unused|Set the previous ordinal mode (the mode numbered before the current one). If the next mode is off the end of the list, it wraps around and sets the first mode. This action is defined/supported only for single-state VSCs.
+The string `"Inc$Mode"`|ignored|Set the next ordinal mode (the mode numbered after the current one). If the next mode is off the end of the list, it wraps around and sets the first mode. This action is defined/supported only for single-state VSCs.
+The string `"Dec$Mode"`|ignored|Set the previous ordinal mode (the mode numbered before the current one). If the next mode is off the end of the list, it wraps around and sets the first mode. This action is defined/supported only for single-state VSCs.
 
-> In case you're wondering, VSCs use the standard definition of a scene controller device, but "standard" (non-LED) scene controller in Vera defines no actions at all, and the only action supported by the extension "scene controller with LEDs" device type is `SetLight`. That is why we must use `SetLight` as the action. We can't add actions to the standard definitions, so I chose to "overload" the definition of `SetLight`.
+> In case you're wondering, VSCs use the standard definition of a scene controller device, but the "standard" (non-LED) scene controller Vera device type defines no actions at all, and the one and only action supported by the extension "scene controller with LEDs" device type is `SetLight`. That is why we must use `SetLight` as the action--it's the only thing we can use. We can't add actions to the standard definitions, so the only option is to "overload" the meaning of values passed to `SetLight`.
 
-## Distinguishing Switchboard Virtual Switches from Real Switches
+## Distinguishing Switchboard Virtual Devices from "Real" Devices
 
-Sometimes it may be necessary to distinguish Switchboard's virtual switches from real switches (e.g. in a startup Lua routine). Device type cannot be used, and Switchboard tries to use Vera-standard devices types to the greatest extent possible. But there are some built-in "tells": all Switchboard child devices will have the manufacturer attribute set to "rigpapa", and the model attribute set to the switch type name. Currently, only two types are defined: "Switchboard Virtual Binary Switch" and "Switchboard Virtual Tri-state Switch".
+Sometimes it may be necessary to distinguish Switchboard's virtual devices from real devices (e.g. in a startup Lua routine). Device type cannot be used, as Switchboard tries to use Vera-standard devices types to the greatest extent possible. But there are some built-in "tells":
+
+1. The best, most-reliable method is to check the parent ID of the device; if the parent ID points to a Switchboard master device, then it's a Switchboard virtual device. A quick version of this test is `if (luup.devices[luup.devices[devicenum_being_tested].device_num_parent] or {}).device_type == "urn:schemas-toggledbits-com:device:Switchboard:1" then (it's a Switchboard device) end`
+2. An alternate method of detection is to look for the existence of the `Behavior` state variable in service `urn:toggledbits-com:serviceId:Switchboard1` on the device; if present and not blank, it's a Switchboard virtual device;
+2. The old, now deprecated method is to check the *manufacturer* attribute on the device, which will be "rigpapa"; the *model* attribute will be set to the switch type name, which is always a string beginning with "Switchboard".
 
 ## License and Warranty
 
