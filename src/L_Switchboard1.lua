@@ -15,7 +15,7 @@ local _PLUGIN_VERSION = "1.7"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 19270
-local _UIVERSION = 20004
+local _UIVERSION = 20137
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
