@@ -9,21 +9,13 @@ NOTE: This plugin does not yet support openLuup. The things that make it work be
 
 ## Installing on Vera
 
-This plugin has not yet been published to the Vera Plugin Marketplace, so you will have to install it "the hard way."
+Vera users can install Switchboard by searching for it under *Apps > Install apps*.
 
-1. Download a ZIP file of the plugin by clicking the green "Clone or download" button on the Github repository master branch page, here: https://github.com/toggledbits/Switchboard-Vera (choose "Download ZIP" from the pop-up).
-2. Unzip the downloaded ZIP file to a folder.
-3. Upload the folder contents to your Vera using the uploader at *Apps > Develop apps > Luup files*. You should turn *off* the "Restart Luup after Upload" checkbox until the last file, and then turn it back on. If you forget, no worries, just turn it on and re-upload the last file.
-4. Wait for Luup to reload (about 60-120 seconds depending on your Vera and system load).
-5. Go to *Apps > Develop apps > Create device* and supply the following fields (leave the rest blank). Copy-paste is recommended, as accuracy in spelling and capitalization is vital to the success of this step:
-   * Description: `Switchboard`
-   * Upnp Device Filename: `D_Switchboard1.xml`
-   * Upnp Implementation Filename: `I_Switchboard1.xml`
-6. Press the "Create device" button.
-6. Go to the "Test Luup code (Lua)" item in *Apps > Develop apps*, and enter and run: `luup.reload()`
-6. While that's working, hard-refresh your browser (reload page with cache flush: CTRL-F5 on Chrome/Win, SHIFT-F5 on Firefox/Win, CMD+SHIFT+R on many Mac browsers I'm told).
+Alternately, users may request the following URL in a browser, substituting your Vera's local IP where indicated:
 
-After Luup reloads and your Vera UI has reloaded, you should see the "Switchboard" device in your devices list.
+```
+http://vera-local-ip/port_3480/data_request?id=action&action=CreatePlugin&PluginNum=9194&serviceId=urn:micasaverde-com:serviceId:HomeAutomationGateway1
+```
 
 ## Installing on openLuup
 
@@ -36,7 +28,7 @@ that version, you will also need to install the supplemental device files. Downl
 https://github.com/toggledbits/Switchboard-Vera/tree/master/openLuup
 and then place them in your openLuup install directory with the Switchboard plugin files.
 
-## Creating Virtual Switches
+## Creating Virtual Switches/Devices
 
 To create virtual switches, go into the "Switchboard" device control panel, and hit the "Add One" button to create one new virtual switch, or "Add Five" to create them five at a time. Each click requires processing and Luup reload, so do this slowly if you have a large number of switches to create.
 
@@ -56,7 +48,7 @@ NOTE: Turning "on" a pulse switch that is already on does not extend pulse timin
 
 NOTE: When a switch is hidden, it will also not be visible in Vera's scene trigger menus and other places in the UI, so if you're trying to create a new scene using a hidden virtual switch, you will first need to go into the Switchboard status panel and un-hide the switch. You can re-hide it after; that doesn't affect the scene's ability to *use* the switch.
 
-## Virtual Window Covering
+## Virtual Window Coverings
 
 It may seem odd to have virtual window coverings, but in Vera, the window covering implementation uses the `Dimming1` service to set the opening (e.g. 0% is closed, and 50% is half open, and 100% is fully open). Calling `SetLoadLevelTarget` as one would for a dimmer controls the shade opening. The `SwitchPower` action `SetTarget` can also be used to quickly fully-open or fully-close the covering.
 
@@ -82,15 +74,15 @@ When a VSC is in *multi-state* mode, the UI allows more than one mode to be set.
 
 The `Value` state variable is also used to store the effective mode. For single-state VSCs, this will only ever contain one value: the last mode selected. For multi-state VSCs, it will contain a comma-separated list of all modes that are active.
 
-For convenience when using multi-state VSCs, the VSC also sets the state variable `ActiveN`, where `N` is the index number of the mode, to 1 is the mode is active, or 0 otherwise.
+The VSC also sets the state variable `ActiveN`, where `N` is the index number of the mode, to 1 on each active mode, or 0 otherwise.
 
-> Now the bad news. Despite using the Vera-defined device definition, Vera's own declared UI for scene controllers, and that supported by the mobile apps, does not (currently) make provision for a multi-button interface in those UIs for activating scenes. The standard UIs are basically blank, with the device name and an icon and that's it. The multi-button UI presented by Switchboard VSCs is achieved by replacing the Vera standard UI declaration with our own, but the current mobile apps (including third party) do not use this data and so cannot (and likely never will) by able to paint the custom buttons. Sorry, there will be no UI for VSCs in the mobile app world.
+> Now the bad news. Despite using the Vera-defined device definition, Vera's own declared UI for scene controllers is empty both in its web UI and mobile apps &mdash; the standard UIs show only the device name and an icon. In order to make Switchboard's VSCs useful at least in the web UI, Switchboard replaces the Vera standard UI declaration on VSC devices with a custom, dynamically-created one. But, as usual for all custom UIs in Vera currently, the current mobile apps (including third party) do not use the available UI definition data and so do not (and likely never will) be able to paint the custom buttons. Sorry, there will be no UI for VSCs in the mobile app world.
 
 ### Controlling VSCs
 
-VSCs can be controlled by Lua, Reactor, PLEG, etc. by using the `SetLight` action (in service `urn:micasaverde-com:serviceId:SceneControllerLED1`). The action takes two parameters: `Indicator` and `newValue`. Their use is as follows:
+VSCs can be controlled by Lua, Reactor Activities, PLEG, etc. by invoking the `SetLight` action (in service `urn:micasaverde-com:serviceId:SceneControllerLED1`). The action takes two parameters: `Indicator` and `newValue`. Their use is as follows:
 
-Indicator|newValue|Description
+`Indicator`|`newValue`|Description/Function
 ---------|--------|-----------
 An integer from 1 to the number of buttons/labels/modes *or* a string matching one of the defined modes/labels|0 or 1|For multi-state VSCs, turns the mode in `Indicator` on or off according to `newValue` (1=active, 0=inactive, blank=toggle). For single-state VSCs, the mode in `Indicator` is made the (only) current mode, and `newValue` must be 1 (any other value is invalid/unsupported).
 The string `"Set$Labels"`|label list|Configures the list of modes/labels for the target VSC. This will cause a Luup reload. You will also need to hard refresh your browser after this action (but I can't make that happen from the plugin).
@@ -105,13 +97,13 @@ The string `"Dec$Mode"`|ignored|Set the previous ordinal mode (the mode numbered
 
 Sometimes it may be necessary to distinguish Switchboard's virtual devices from real devices (e.g. in a startup Lua routine). Device type cannot be used, as Switchboard tries to use Vera-standard devices types to the greatest extent possible. But there are some built-in "tells":
 
-1. The best, most-reliable method is to check the parent ID of the device; if the parent ID points to a Switchboard master device, then it's a Switchboard virtual device. A quick version of this test is `if (luup.devices[luup.devices[devicenum_being_tested].device_num_parent] or {}).device_type == "urn:schemas-toggledbits-com:device:Switchboard:1" then (it's a Switchboard device) end`
+1. The best, most-reliable method is to check the parent of the device; if the parent is a Switchboard master device, then it's a Switchboard virtual device. A quick version of this test is `if (luup.devices[luup.devices[devicenum_being_tested].device_num_parent] or {}).device_type == "urn:schemas-toggledbits-com:device:Switchboard:1" then --[[ it's a Switchboard device --]] end`
 2. An alternate method of detection is to look for the existence of the `Behavior` state variable in service `urn:toggledbits-com:serviceId:Switchboard1` on the device; if present and not blank, it's a Switchboard virtual device;
 2. The old, now deprecated method is to check the *manufacturer* attribute on the device, which will be "rigpapa"; the *model* attribute will be set to the switch type name, which is always a string beginning with "Switchboard".
 
 ## License and Warranty
 
-Switchboard, Copyright 2018,2019 Patrick H. Rigney (rigpapa). All Rights Reserved.
+Switchboard, Copyright 2018,2019,2020 Patrick H. Rigney (rigpapa). All Rights Reserved.
 
 Switchboard is offered under the MIT License:
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
