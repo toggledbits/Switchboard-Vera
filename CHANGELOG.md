@@ -1,6 +1,6 @@
 # Switchboard -- Change Log
 
-## Version 1.7 (development)
+## Version 1.7 (released)
 
 * Tri-state switches will now timer-reset to the `TimerResetState` when set to any state other than that (not just "on" as in 1.6).
 * New virtual Scene Controller! Set the `Values` state variable to the (comma-separated) list of button values. You can do this directly, or through the device's own UI (not the Switchboard master device--go into the device control panel on the virtual scene controller). See the README for more.
