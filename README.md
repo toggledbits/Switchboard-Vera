@@ -1,11 +1,9 @@
 # Switchboard -- Re-imagined Virtual Switches for Vera Home Automation
 
 ![Switchboard](https://www.toggledbits.com/assets/switchboard/switchboard-default.png) 
-This plugin is my take on a modernized *Virtual Switch* plugin for Vera. The long-lived (near zombie) Virtual Switch plugin
+This plugin is my take on a modernized *Virtual Switch* plugin for Vera and openLuup. The long-lived (near zombie) Virtual Switch plugin
 has some subtle issues that make it difficult to use with some third party applications (including Google Home and Amazon Echo devices), and even Vera's own native mobile app for Android.
 Hopefully, this version of virtual switches will address those shortcomings.
-
-NOTE: This plugin does not yet support openLuup. The things that make it work better on Vera than VSwitch are the things that are troubling to openLuup. I will make an effort to reconcile these at some point, but for the moment, this plugin is only supported on Vera UI7 and higher.
 
 ## Installing on Vera
 
@@ -22,11 +20,6 @@ http://vera-local-ip/port_3480/data_request?id=action&action=CreatePlugin&Plugin
 **NOTE:** Version 2018.11.21 of openLuup, or higher, is required to run Switchboard.
 
 Installation of Switchboard is best done from the AltAppStore. Find it. Click it.
-
-If you are running an openLuup dated earlier than 2019.06.02, and you do not wish to upgrade to at least
-that version, you will also need to install the supplemental device files. Download file files from
-https://github.com/toggledbits/Switchboard-Vera/tree/master/openLuup
-and then place them in your openLuup install directory with the Switchboard plugin files.
 
 ## Creating Virtual Switches/Devices
 
