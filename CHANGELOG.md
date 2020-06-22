@@ -1,5 +1,10 @@
 # Switchboard -- Change Log
 
+## Version 1.8 (development 20173)
+
+* Timer availability is now per-device-type, and removed from UI where not applicable.
+* Completely restructure inits at switch startup.
+
 ## Version 1.7 (released)
 
 * Tri-state switches will now timer-reset to the `TimerResetState` when set to any state other than that (not just "on" as in 1.6).
