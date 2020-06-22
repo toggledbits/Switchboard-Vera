@@ -11,10 +11,10 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.7"
+local _PLUGIN_VERSION = "1.8develop-20173"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
-local _CONFIGVERSION = 19270
+local _CONFIGVERSION = 20173
 local _UIVERSION = 20137
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
@@ -28,7 +28,6 @@ local SCLEDSID = "urn:micasaverde-com:serviceId:SceneControllerLED1"
 -- local HADSID = "urn:micasaverde-com:serviceId:HaDevice1"
 
 local DEV_MFG = "rigpapa"
-local DEV_MODEL = "Switchboard Virtual Binary Switch"
 
 local pluginDevice = false
 local isALTUI = false
@@ -45,15 +44,15 @@ local dfMap = {
 	, ['TriState'] =
 			{ name="Tri-state Switch", device_type="urn:schemas-upnp-org:device:BinaryLight:1", device_file="D_BinaryLight1.xml", category=3, subcategory=1, device_json="D_TriStateSwitch1.json", order=3 }
 	, ['Cover'] =
-			{ name="Window Covering", device_type="urn:schemas-micasaverde-com:device:WindowCovering:1", device_file="D_WindowCovering1.xml", category=8, subcategory=1, device_json="D_WindowCovering1.json", order=4 }
+			{ name="Window Covering", device_type="urn:schemas-micasaverde-com:device:WindowCovering:1", device_file="D_WindowCovering1.xml", category=8, subcategory=1, device_json="D_WindowCovering1.json", timer=false, order=4 }
 	, ['Lock'] =
-			{ name="Door Lock", device_type="urn:schemas-micasaverde-com:device:DoorLock:1", device_file="D_DoorLock1.xml", category=7, subcategory=0, device_json="D_DoorLock1.json", order=5, service="urn:micasaverde-com:serviceId:DoorLock1" }
+			{ name="Door Lock", device_type="urn:schemas-micasaverde-com:device:DoorLock:1", device_file="D_DoorLock1.xml", category=7, subcategory=0, device_json="D_DoorLock1.json", timer=false, order=5, service="urn:micasaverde-com:serviceId:DoorLock1" }
 	, ['Valve'] =
 			{ name="Water Valve", device_type="urn:schemas-micasaverde-com:device:WaterValve:1", device_file="D_WaterValve1.xml", category=3, subcategory=7, device_json="D_WaterValve1.json", order=6 }
 	, ['Relay'] =
 			{ name="Relay", device_type="urn:schemas-micasaverde-com:device:Relay:1", device_file="D_Relay1.xml", category=3, subcategory=8, device_json="D_Relay1.json", order=7 }
 	, ['SC'] =
-			{ name="Scene Controller", device_type="urn:schemas-micasaverde-com:device:SceneControllerLED:1", device_file="D_SceneControllerLED1.xml", category=14, device_json="D_SwitchboardSCTemplate1.json", order=8 }
+			{ name="Scene Controller", device_type="urn:schemas-micasaverde-com:device:SceneControllerLED:1", device_file="D_SceneControllerLED1.xml", category=14, device_json="D_SwitchboardSCTemplate1.json", timer=false, order=8 }
 }
 
 local function dump(t, seen)
@@ -434,75 +433,59 @@ end
 local function initSwitch( switch )
 	D("initSwitch(%1)", switch)
 
+	local b = getVar( "Behavior", "", switch, MYSID )
+	local df = dfMap[b]
+	if b == "" or not df then
+		b = "Binary"
+		df = dfMap[b]
+		luup.variable_set( MYSID, "Behavior", b, switch )
+	end
+	luup.attr_set( 'manufacturer', DEV_MFG, switch )
+	if df.name then luup.attr_set( 'model', ("Switchboard Virtual %s"):format(df.name), switch ) end
+
 	local s = getVarNumeric( "Version", 0, switch, MYSID )
 	if s == 0 then
 		L("Initializing new child switch %1", switch)
-
-		local b = getVar( "Behavior", "", switch, MYSID ) or "Binary" -- special default
-		local df = dfMap[b] or {}
-		if b ~= "SC" or not df then
-			initVar( df.target or "Target", "0", switch, df.service or SWITCHSID )
-			initVar( df.status or "Status", "0", switch, df.service or SWITCHSID )
-		end
-		if b == "Binary" or not df then
-			luup.variable_set( MYSID, "Behavior", "Binary", switch )
-			luup.attr_set('category_num', "3", switch)
-			luup.attr_set('subcategory_num', "0", switch)
-			luup.attr_set( 'manufacturer', DEV_MFG, switch )
-			luup.attr_set( 'model', DEV_MODEL, switch )
-			initVar( "ImpulseTime", "0", switch, MYSID )
-			initVar( "ImpulseResetTime", "0", switch, MYSID )
-			initVar( "AlwaysUpdateStatus", "0", switch, MYSID )
-			if b == "TriState" then
-				initVar( "TimerResetState", "", switch, MYSID )
-			end
-			-- Old VSwitch states
-			initVar( "Target", "0", switch, VSSID )
-			initVar( "Status", "0", switch, VSSID )
-			initVar( "Text1", "Text1", switch, VSSID )
-			initVar( "Text2", "Text2", switch, VSSID )
-		elseif b == "Dimmer" then
-			initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
-			initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
-			initVar( "LoadLevelLast", 100, switch, DIMMERSID )
-		elseif b == "Cover" then
-			initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
-			initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
-			initVar( "RampRatePerSecond", 5, switch, MYSID )
-		elseif b == "SC" then
-			initVar( "Labels", "A,B,C,D", switch, MYSID )
-			initVar( "MultiSelect", "0", switch, MYSID )
-			initVar( "Value", "", switch, MYSID )
-			initVar( "Light", 0, switch, SCLEDSID )
-			initVar( "sl_SceneActivated", "", switch, SCSID )
-			initVar( "sl_SceneDeactivated", "", switch, SCSID )
-			initVar( "Scenes", "", switch, SCSID )
-		end
-
-		luup.variable_set( MYSID, "Version", _CONFIGVERSION, switch )
-		return
+		if df.category then luup.attr_set('category_num', df.category, switch) end
+		if df.subcategory then luup.attr_set('subcategory_num', df.subcategory, switch) end
 	end
 
-	if s < 000002 then
-		luup.attr_set( 'manufacturer', DEV_MFG, switch )
-		luup.attr_set( 'model', DEV_MODEL, switch )
+	if b ~= "SC" then
+		initVar( df.target or "Target", "0", switch, df.service or SWITCHSID )
+		initVar( df.status or "Status", "0", switch, df.service or SWITCHSID )
+		initVar( "AlwaysUpdateStatus", "0", switch, MYSID )
 	end
-
-	if s < 000003 then
-		initVar( "AlwaysUpdateStatus", 0, switch, MYSID )
+	if b == "Binary" then
+		-- Old VSwitch plugin states
+		initVar( "Target", "0", switch, VSSID )
+		initVar( "Status", "0", switch, VSSID )
+		initVar( "Text1", "Text1", switch, VSSID )
+		initVar( "Text2", "Text2", switch, VSSID )
 	end
-
-	if s < 19098 then
-		local b = "Binary"
-		if luup.attr_get( "device_json", switch ) == "D_TriStateSwitch1.json" then
-			b = "TriState"
-		elseif luup.devices[switch].device_type == "urn:schemas-upnp-org:device:DimmableLight:1" then
-			b = "Dimmer"
-		end
-		luup.variable_set( MYSID, "Behavior", b, switch )
+	if b == "Dimmer" then
+		initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
+		initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
+		initVar( "LoadLevelLast", 100, switch, DIMMERSID )
 	end
-
-	local b = getVar( "Behavior", "Binary", switch, MYSID )
+	if b == "Cover" then
+		initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
+		initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
+		initVar( "RampRatePerSecond", 5, switch, MYSID )
+	end
+	if b == "SC" then
+		initVar( "Labels", "A,B,C,D", switch, MYSID )
+		initVar( "MultiSelect", "0", switch, MYSID )
+		initVar( "Value", "", switch, MYSID )
+		initVar( "Light", 0, switch, SCLEDSID )
+		initVar( "sl_SceneActivated", "", switch, SCSID )
+		initVar( "sl_SceneDeactivated", "", switch, SCSID )
+		initVar( "Scenes", "", switch, SCSID )
+	end
+	if df.timer ~= false then
+		initVar( "ImpulseTime", "0", switch, MYSID )
+		initVar( "ImpulseResetTime", "0", switch, MYSID )
+		initVar( "TimerResetState", "0", switch, MYSID )
+	end
 
 	if s < 19223 then
 		if b == "Cover" then

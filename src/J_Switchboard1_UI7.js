@@ -13,7 +13,7 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-	var pluginVersion = "1.7";
+	var pluginVersion = "1.8develop-20173";
 
 	var _UIVERSION = 20137; /* must agree with L_Switchboard1.lua */
 
@@ -28,6 +28,7 @@ var Switchboard1_UI7 = (function(api, $) {
 	var inStatusPanel = false;
 	var isOpenLuup = false;
 	var isALTUI = ( "undefined" !== typeof(MultiBox) );
+	var childBehavior = {};
 
 	/* Closing the control panel. */
 	function onBeforeCpanelClose(args) {
@@ -118,7 +119,7 @@ var Switchboard1_UI7 = (function(api, $) {
 		var el = jQuery( ev.currentTarget );
 		var row = el.closest( 'div.row' );
 		var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
-		var act = el.attr( 'id' );
+		var act = el.data( 'swbd-action' );
 		var t;
 
 		switch ( act ) {
@@ -148,12 +149,13 @@ var Switchboard1_UI7 = (function(api, $) {
 			case 'repeat':
 				t = 0 !== parseInt( api.getDeviceState( dev, serviceId, "AlwaysUpdateStatus" ) || 0 );
 				/* Set opposite icon and value */
-				jQuery( 'i#repeat', row ).text( t ? 'repeat_one' : 'repeat' )
+				jQuery( 'i.swbd-repeat', row ).text( t ? 'repeat_one' : 'repeat' )
 					.attr( 'title', t ? "Trigger only if status changes" : "Always trigger" );
 				api.setDeviceStatePersistent( dev, serviceId, "AlwaysUpdateStatus", String(t ? 0 : 1) );
 				break;
 
 			default:
+				console("handleIconClick() unhandled action " + String(act));
 		}
 	}
 
@@ -161,13 +163,13 @@ var Switchboard1_UI7 = (function(api, $) {
 		var el = jQuery( ev.currentTarget );
 		var row = el.closest( 'div.row' );
 		var dev = parseInt( row.attr( 'id' ).replace( /^d/i, "" ) );
-		var subject = el.attr( 'id' ) == "vstext2" ? "Text2" : "Text1";
+		var subject = el.hasClass( 'vstext2' ) ? 2 : 1;
 		var txt = api.getDeviceState( dev, "urn:upnp-org:serviceId:VSwitch1", subject ) || "";
-		var newText = prompt( 'Enter new '+subject+' value:', txt );
+		var newText = prompt( 'Enter new Text'+subject+' value:', txt );
 		console.log( typeof(newText) + ":" + String(newText) );
 		if ( newText != null ) {
-			api.setDeviceStatePersistent( dev, "urn:upnp-org:serviceId:VSwitch1", subject, newText );
-			jQuery( 'span#vstext' + ( subject == "Text2" ? "2" : "1" ), row ).text( newText );
+			api.setDeviceStatePersistent( dev, "urn:upnp-org:serviceId:VSwitch1", 'Text'+subject, newText );
+			jQuery( 'span.vstext' + subject, row ).text( newText );
 		}
 	}
 
@@ -213,44 +215,53 @@ var Switchboard1_UI7 = (function(api, $) {
 			if ( "Cover" === behavior ) {
 				var l = parseInt( api.getDeviceState( obj.id, "urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus" ) || "0" );
 				l = Math.floor( l / 10 + 0.5 ) * 10;
-				el.append( '<img id="state" src="/cmh/skins/default/img/devices/device_states/window_covering_' +
+				el.append( '<img class="swbd-state" src="/cmh/skins/default/img/devices/device_states/window_covering_' +
 					( st == "0" ? "off" : l ) + '.png" width="32" height="32" alt="cover state">' );
 			} else {
-				el.append( '<img id="state" src="https://www.toggledbits.com/assets/switchboard/switchboard-switch-' +
+				el.append( '<img class="swbd-state" src="https://www.toggledbits.com/assets/switchboard/switchboard-switch-' +
 					( {"0":"off","1":"on","2":"x"}[st] || "x" ) + '.png" width="32" height="32" alt="switch state">' );
 			}
 			el.attr( 'title', 'Click to toggle state' );
 			row.append( el );
 			row.append( jQuery( '<div class="vsname col-xs-11 col-md-5" />' ).text( obj.name + ' (#' + obj.id + ')' ).attr( 'title', 'Click to change name' ) );
 			el = jQuery( '<div class="col-xs-4 col-md-2" />' );
-			el.append( '<i id="visibility" class="material-icons md-btn" title="Toggle visibility">visibility</i>' );
-			el.append( '<i id="impulse" class="material-icons md-btn" title="Set auto-reset timer">timer_off</i>' );
+			el.append( '<i class="swbd-vis material-icons md-btn" title="Toggle visibility">visibility</i>' );
+			if ( false !== ( childBehavior[behavior] || {} ).timer ) {
+				el.append( '<i class="swbd-impulse material-icons md-btn" title="Set auto-reset timer">timer_off</i>' );
+			}
 			if ( isOpenLuup ) {
-				el.append( '<i id="repeat" class="material-icons md-btn" title="Trigger only if status changes">repeat_one</i>' );
+				el.append( '<i class="swbd-repeat material-icons md-btn" title="Trigger only if status changes">repeat_one</i>' );
 			}
 			row.append( el );
-			var s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text1" );
-			row.append( '<div class="col-xs-4 col-md-2"><span id="vstext1" class="vstext"/><i id="vstext1" class="vstext material-icons md-btn">create</i></div>' );
-			jQuery( 'span#vstext1', row ).text( s || "" );
-			s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text2" );
-			row.append( '<div class="col-xs-4 col-md-2"><span id="vstext2" class="vstext"/><i id="vstext2" class="vstext material-icons md-btn">create</i></div>' );
-			jQuery( 'span#vstext2', row ).text( s || "" );
+
+			if ( "Binary" === behavior ) {
+				var s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text1" );
+				row.append( '<div class="col-xs-4 col-md-2"><span class="vstext vstext1"/><i id="vstext1" class="vstext material-icons md-btn">create</i></div>' );
+				jQuery( 'span.vstext1', row ).text( s || "" );
+				s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text2" );
+				row.append( '<div class="col-xs-4 col-md-2"><span class="vstext vstext2"/><i id="vstext2" class="vstext material-icons md-btn">create</i></div>' );
+				jQuery( 'span.vstext2', row ).text( s || "" );
+			} else {
+				row.append( '<div class="col-xs-8 col-md-4" />' );
+			}
+
 			row.attr( 'id', 'd' + obj.id );
 			container.append( row );
 
 			if ( ( obj.invisible || "0" ) != "0" ) {
-				jQuery( 'i#visibility', row ).text( 'visibility_off' );
+				jQuery( 'i.swbd-vis', row ).text( 'visibility_off' ).data('swbd-action', 'visibility');
 			}
 			st = parseInt( api.getDeviceState( obj.id, serviceId, "ImpulseTime" ) || 0 );
 			if ( ! isNaN( st ) && st > 0 ) {
-				jQuery( 'i#impulse', row ).text( 'timer' ).attr( 'title', 'Always trigger' );
+				jQuery( 'i.swbd-impulse', row ).text( 'timer' ).data('swbd-action', 'impulse')
+					.attr( 'title', 'Auto-reset ' + st + ' seconds; click to modify or clear' );
 			}
 			st = 0 !== parseInt( api.getDeviceState( obj.id, serviceId, "AlwaysUpdateStatus" ) || 0 );
 			if ( st ) {
-				jQuery( 'i#repeat', row ).text( 'repeat' );
+				jQuery( 'i.swbd-repeat', row ).text( 'repeat' ).data('swbd-action', 'repeat');
 			}
 
-			jQuery( 'img#state', row ).on( 'click.switchboard', handleStateClick );
+			jQuery( 'img.swbd-state', row ).on( 'click.switchboard', handleStateClick );
 			jQuery( 'i.md-btn', row ).on( 'click.switchboard', handleIconClick );
 			jQuery( '.vstext', row ).attr( 'title', 'Click to edit' ).on( 'click.switchboard', handleTextClick );
 			jQuery( 'div.vsname', row ).on( 'click.switchboard', handleNameClick );
@@ -341,7 +352,7 @@ var Switchboard1_UI7 = (function(api, $) {
 			api.setCpanelContent( html );
 
 			var container = jQuery( "div#switchboardstatus" );
-			container.append( jQuery( '<div id="devices" />' ) );
+			container.append( jQuery( '<div id="devices">Loading... please wait...</div>' ) );
 			var br = jQuery( '<div id="tail" class="form-inline" />' );
 			var sel = jQuery( '<select id="childtype" class="form-control form-control-sm" />' );
 			sel.append( jQuery( '<option/>' ).val("").text('--choose type--') ).val( "" ); /* default */
@@ -361,6 +372,7 @@ var Switchboard1_UI7 = (function(api, $) {
 				dataType: "json",
 				timeout: 5000
 			}).done( function( data, statusText, jqXHR ) {
+				childBehavior = data;
 				var hasOne = false;
 				var childMenu = jQuery( 'div#tail select#childtype' );
 				var lx = [];
@@ -387,14 +399,15 @@ var Switchboard1_UI7 = (function(api, $) {
 				if ( lx.length > 0 ) {
 					jQuery( 'div#tail button#addchild' ).prop( 'disabled', false );
 				}
+
+				updateStatus( api.getCpanelDeviceId() );
+
+				api.registerEventHandler('on_ui_deviceStatusChanged', Switchboard1_UI7, 'onUIDeviceStatusChanged');
+				inStatusPanel = true; /* Tell the event handler it's OK */
+
 			}).fail( function( jqXHR ) {
 				alert( "There was an error loading configuration data. Vera may be busy; try again in a moment." );
 			});
-
-			api.registerEventHandler('on_ui_deviceStatusChanged', Switchboard1_UI7, 'onUIDeviceStatusChanged');
-			inStatusPanel = true; /* Tell the event handler it's OK */
-
-			updateStatus( api.getCpanelDeviceId() );
 		}
 		catch( e ) {
 			alert( String(e) + "\n" + e.stack );
