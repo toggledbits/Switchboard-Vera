@@ -11,10 +11,10 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.8develop-20173"
+local _PLUGIN_VERSION = "1.8"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
-local _CONFIGVERSION = 20173
+local _CONFIGVERSION = 20179
 local _UIVERSION = 20137
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"

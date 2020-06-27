@@ -1,6 +1,6 @@
 # Switchboard -- Change Log
 
-## Version 1.8 (development 20173)
+## Version 1.8 (released, 20179)
 
 * Timer availability is now per-device-type, and removed from UI where not applicable.
 * Completely restructure inits at switch startup.
