@@ -155,7 +155,7 @@ var Switchboard1_UI7 = (function(api, $) {
 				break;
 
 			default:
-				console("handleIconClick() unhandled action " + String(act));
+				console.log("handleIconClick() unhandled action " + String(act));
 		}
 	}
 
@@ -225,12 +225,18 @@ var Switchboard1_UI7 = (function(api, $) {
 			row.append( el );
 			row.append( jQuery( '<div class="vsname col-xs-11 col-md-5" />' ).text( obj.name + ' (#' + obj.id + ')' ).attr( 'title', 'Click to change name' ) );
 			el = jQuery( '<div class="col-xs-4 col-md-2" />' );
-			el.append( '<i class="swbd-vis material-icons md-btn" title="Toggle visibility">visibility</i>' );
+			jQuery( '<i class="swbd-vis material-icons md-btn" title="Toggle visibility">visibility</i>' )
+				.data( 'swbd-action', 'visibility' )
+				.appendTo( el );
 			if ( false !== ( childBehavior[behavior] || {} ).timer ) {
-				el.append( '<i class="swbd-impulse material-icons md-btn" title="Set auto-reset timer">timer_off</i>' );
+				jQuery( '<i class="swbd-impulse material-icons md-btn" title="Set auto-reset timer">timer_off</i>' )
+					.data('swbd-action', 'impulse')
+					.appendTo( el );
 			}
 			if ( isOpenLuup ) {
-				el.append( '<i class="swbd-repeat material-icons md-btn" title="Trigger only if status changes">repeat_one</i>' );
+				jQuery( '<i class="swbd-repeat material-icons md-btn" title="Trigger only if status changes">repeat_one</i>' )
+					.data('swbd-action', 'repeat')
+					.appendTo( el );
 			}
 			row.append( el );
 
@@ -249,16 +255,16 @@ var Switchboard1_UI7 = (function(api, $) {
 			container.append( row );
 
 			if ( ( obj.invisible || "0" ) != "0" ) {
-				jQuery( 'i.swbd-vis', row ).text( 'visibility_off' ).data('swbd-action', 'visibility');
+				jQuery( 'i.swbd-vis', row ).text( 'visibility_off' );
 			}
 			st = parseInt( api.getDeviceState( obj.id, serviceId, "ImpulseTime" ) || 0 );
 			if ( ! isNaN( st ) && st > 0 ) {
-				jQuery( 'i.swbd-impulse', row ).text( 'timer' ).data('swbd-action', 'impulse')
+				jQuery( 'i.swbd-impulse', row ).text( 'timer' )
 					.attr( 'title', 'Auto-reset ' + st + ' seconds; click to modify or clear' );
 			}
 			st = 0 !== parseInt( api.getDeviceState( obj.id, serviceId, "AlwaysUpdateStatus" ) || 0 );
 			if ( st ) {
-				jQuery( 'i.swbd-repeat', row ).text( 'repeat' ).data('swbd-action', 'repeat');
+				jQuery( 'i.swbd-repeat', row ).text( 'repeat' );
 			}
 
 			jQuery( 'img.swbd-state', row ).on( 'click.switchboard', handleStateClick );
