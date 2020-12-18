@@ -13,9 +13,9 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-	var pluginVersion = "1.8";
+	var pluginVersion = "1.9develop-20353";
 
-	var _UIVERSION = 20137; /* must agree with L_Switchboard1.lua */
+	var _UIVERSION = 20353; /* must agree with L_Switchboard1.lua */
 
 	/* unique identifier for this plugin... */
 	var uuid = 'fabe8224-2341-11e9-8762-74d4351650de'; /* 2019-01-28 Switchboard */
@@ -199,8 +199,8 @@ var Switchboard1_UI7 = (function(api, $) {
 		var container = jQuery( "div#switchboardstatus div#devices" ).empty();
 
 		var switches = getDevices( pdev );
-		var row = jQuery('<div class="row headrow" />');
-		row.append( '<div class="colhead col-xs-1 col-md-1" />' );
+		var row = jQuery('<div class="row headrow"></div>');
+		row.append( '<div class="colhead col-xs-1 col-md-1"></div>' );
 		row.append( '<div class="colhead col-xs-11 col-md-5">Device Name</div>' );
 		row.append( '<div class="colhead col-xs-4 col-md-2">Options</div>' );
 		row.append( '<div class="colhead col-xs-4 col-md-2">Text1</div>' );
@@ -209,8 +209,8 @@ var Switchboard1_UI7 = (function(api, $) {
 
 		jQuery.each( switches, function( ix, obj ) {
 			var behavior = api.getDeviceState( obj.id, serviceId, "Behavior" ) || "Binary";
-			row = jQuery('<div class="row devicerow" />');
-			var el = jQuery( '<div class="col-xs-1 col-md-1 text-right" />' );
+			row = jQuery('<div class="row devicerow"></div>');
+			var el = jQuery( '<div class="col-xs-1 col-md-1 text-right"></div>' );
 			var st = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:SwitchPower1", "Status" ) || "0";
 			if ( "Cover" === behavior ) {
 				var l = parseInt( api.getDeviceState( obj.id, "urn:upnp-org:serviceId:Dimming1", "LoadLevelStatus" ) || "0" );
@@ -223,8 +223,8 @@ var Switchboard1_UI7 = (function(api, $) {
 			}
 			el.attr( 'title', 'Click to toggle state' );
 			row.append( el );
-			row.append( jQuery( '<div class="vsname col-xs-11 col-md-5" />' ).text( obj.name + ' (#' + obj.id + ')' ).attr( 'title', 'Click to change name' ) );
-			el = jQuery( '<div class="col-xs-4 col-md-2" />' );
+			row.append( jQuery( '<div class="vsname col-xs-11 col-md-5"></div>' ).text( obj.name + ' (#' + obj.id + ')' ).attr( 'title', 'Click to change name' ) );
+			el = jQuery( '<div class="col-xs-4 col-md-2"></div>' );
 			jQuery( '<i class="swbd-vis material-icons md-btn" title="Toggle visibility">visibility</i>' )
 				.data( 'swbd-action', 'visibility' )
 				.appendTo( el );
@@ -242,13 +242,13 @@ var Switchboard1_UI7 = (function(api, $) {
 
 			if ( "Binary" === behavior ) {
 				var s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text1" );
-				row.append( '<div class="col-xs-4 col-md-2"><span class="vstext vstext1"/><i id="vstext1" class="vstext material-icons md-btn">create</i></div>' );
+				row.append( '<div class="col-xs-4 col-md-2"><span class="vstext vstext1"></span><i id="vstext1" class="vstext material-icons md-btn">create</i></div>' );
 				jQuery( 'span.vstext1', row ).text( s || "" );
 				s = api.getDeviceState( obj.id, "urn:upnp-org:serviceId:VSwitch1", "Text2" );
-				row.append( '<div class="col-xs-4 col-md-2"><span class="vstext vstext2"/><i id="vstext2" class="vstext material-icons md-btn">create</i></div>' );
+				row.append( '<div class="col-xs-4 col-md-2"><span class="vstext vstext2"></span><i id="vstext2" class="vstext material-icons md-btn">create</i></div>' );
 				jQuery( 'span.vstext2', row ).text( s || "" );
 			} else {
-				row.append( '<div class="col-xs-8 col-md-4" />' );
+				row.append( '<div class="col-xs-8 col-md-4"></div>' );
 			}
 
 			row.attr( 'id', 'd' + obj.id );
@@ -359,12 +359,12 @@ var Switchboard1_UI7 = (function(api, $) {
 
 			var container = jQuery( "div#switchboardstatus" );
 			container.append( jQuery( '<div id="devices">Loading... please wait...</div>' ) );
-			var br = jQuery( '<div id="tail" class="form-inline" />' );
-			var sel = jQuery( '<select id="childtype" class="form-control form-control-sm" />' );
-			sel.append( jQuery( '<option/>' ).val("").text('--choose type--') ).val( "" ); /* default */
+			var br = jQuery( '<div id="tail" class="form-inline"></div>' );
+			var sel = jQuery( '<select id="childtype" class="form-control form-control-sm"></select>' );
+			sel.append( jQuery( '<option></option>' ).val("").text('--choose type--') ).val( "" ); /* default */
 			br.append( sel );
 			br.append( '<button id="addchild" class="btn btn-md btn-primary">Create New Virtual Device</button>' );
-			br.append( '<div id="notice" />' );
+			br.append( '<div id="notice"></div>' );
 			container.append( br );
 
 			/* Now, populate the menu */
@@ -399,7 +399,7 @@ var Switchboard1_UI7 = (function(api, $) {
 				});
 				for ( var k=0; k<lx.length; k++) {
 					ch = lx[k];
-					childMenu.append( jQuery( '<option/>' ).val( ch ).text( data[ch].name || ch ) );
+					childMenu.append( jQuery( '<option></option>' ).val( ch ).text( data[ch].name || ch ) );
 					hasOne = true;
 				}
 				if ( lx.length > 0 ) {

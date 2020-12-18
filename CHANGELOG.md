@@ -1,5 +1,9 @@
 # Switchboard -- Change Log
 
+## Version 1.9 (development, 20353)
+
+* Support for ALTUI 2.52
+
 ## Version 1.8 (released, 20179)
 
 * Timer availability is now per-device-type, and removed from UI where not applicable.
