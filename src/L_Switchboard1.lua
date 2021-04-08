@@ -11,7 +11,7 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.9develop-20353"
+local _PLUGIN_VERSION = "1.9develop-21098"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 20179
@@ -558,8 +558,9 @@ end
 local function rampRun( pdev, taskid )
 	local level = getVarNumeric( "LoadLevelStatus", 0, pdev, DIMMERSID )
 	local target = getVarNumeric( "LoadLevelTarget", 0, pdev, DIMMERSID )
+	target = math.max( 0, math.min( 100, target ) )
 	local rate = math.floor( getVarNumeric( "RampRatePerSecond", 5, pdev, MYSID ) )
-	if rate < 1 then rate = 1 elseif rate > 100 then rate = 100 end
+	rate = math.max( 0.01, math.min( 100, rate ) )
 	local diff = target - level
 	if diff > 0 and diff > rate then
 		diff = rate
@@ -568,13 +569,13 @@ local function rampRun( pdev, taskid )
 	end
 	level = level + diff
 	if level < 0 then level = 0 elseif level > 100 then level = 100 end
-	setVar( DIMMERSID, "LoadLevelStatus", level, pdev )
+	setVar( DIMMERSID, "LoadLevelStatus", math.floor( level + 0.5 ), pdev )
 	if level == 0 then
 		setVar( SWITCHSID, "Status", 0, pdev )
 	elseif level > 0 then
 		setVar( SWITCHSID, "Status", 1, pdev )
 	end
-	if ( target - level ) ~= 0 then
+	if math.abs( target - level ) >= 0.0001 then
 		scheduleTick( taskid, os.time()+1 )
 	end
 end

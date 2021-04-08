@@ -1,7 +1,8 @@
 # Switchboard -- Change Log
 
-## Version 1.9 (development, 20353)
+## Version 1.9 (development, 21098)
 
+* For non-integer ramp rates, make sure `LoadLevelStatus` only stores (rounded) integer.
 * Support for ALTUI 2.52
 
 ## Version 1.8 (released, 20179)
