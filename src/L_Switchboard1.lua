@@ -14,7 +14,7 @@ local _PLUGIN_NAME = "Switchboard"
 local _PLUGIN_VERSION = "1.9develop-21098"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
-local _CONFIGVERSION = 20179
+local _CONFIGVERSION = 21098
 local _UIVERSION = 20353
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
@@ -471,6 +471,7 @@ local function initSwitch( switch )
 		initVar( "LoadLevelTarget", 0, switch, DIMMERSID )
 		initVar( "LoadLevelStatus", 0, switch, DIMMERSID )
 		initVar( "RampRatePerSecond", 5, switch, MYSID )
+		initVar( "RampRunning", 0, switch, MYSID )
 	end
 	if b == "SC" then
 		initVar( "Labels", "A,B,C,D", switch, MYSID )
@@ -555,20 +556,19 @@ resetSwitch = function( switch, taskid )
 	end
 end
 
-local function rampRun( pdev, taskid )
-	local level = getVarNumeric( "LoadLevelStatus", 0, pdev, DIMMERSID )
+local function rampRun( pdev, taskid, tstart, dstart )
+	local level
 	local target = getVarNumeric( "LoadLevelTarget", 0, pdev, DIMMERSID )
 	target = math.max( 0, math.min( 100, target ) )
-	local rate = math.floor( getVarNumeric( "RampRatePerSecond", 5, pdev, MYSID ) )
+	local rate = getVarNumeric( "RampRatePerSecond", 5, pdev, MYSID )
 	rate = math.max( 0.01, math.min( 100, rate ) )
-	local diff = target - level
-	if diff > 0 and diff > rate then
-		diff = rate
-	elseif diff < 0 and (-diff) > rate then
-		diff = -rate
+	local diffTime = os.time() - tstart
+	if ( target > dstart ) then
+		level = math.min( target, dstart + diffTime * rate )
+	else
+		level = math.max( target, dstart - diffTime * rate )
 	end
-	level = level + diff
-	if level < 0 then level = 0 elseif level > 100 then level = 100 end
+	L("rampRun() rate %1 level %2 target %3 diff %4", rate, level, target, diff )
 	setVar( DIMMERSID, "LoadLevelStatus", math.floor( level + 0.5 ), pdev )
 	if level == 0 then
 		setVar( SWITCHSID, "Status", 0, pdev )
@@ -577,6 +577,8 @@ local function rampRun( pdev, taskid )
 	end
 	if math.abs( target - level ) >= 0.0001 then
 		scheduleTick( taskid, os.time()+1 )
+	else
+		setVar( MYSID, "RampRunning", 0, pdev )
 	end
 end
 
@@ -591,12 +593,15 @@ local function rampStart( pdev )
 			setVar( SWITCHSID, "Status", 1, pdev )
 		end
 	else
-		scheduleTick( { id="ramp"..tostring(pdev), owner=pdev, func=rampRun }, os.time()+1 )
+		local status = getVarNumeric( "LoadLevelStatus", 0, pdev, DIMMERSID )
+		setVar( MYSID, "RampRunning", 1, pdev )
+		scheduleTick( { id="ramp"..tostring(pdev), owner=pdev, func=rampRun, args={ os.time(), status } }, os.time()+1 )
 	end
 end
 
 local function rampStop( pdev )
 	scheduleTick( "ramp"..tostring(pdev), 0 )
+	setVar( MYSID, "RampRunning", 0, pdev )
 end
 
 --[[
