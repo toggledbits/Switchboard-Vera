@@ -13,9 +13,9 @@
 
 var Switchboard1_UI7 = (function(api, $) {
 
-	var pluginVersion = "1.9develop-21098";
+	var pluginVersion = "1.9develop-21104";
 
-	var _UIVERSION = 20353; /* must agree with L_Switchboard1.lua */
+	var _UIVERSION = 21104; /* must agree with L_Switchboard1.lua */
 
 	/* unique identifier for this plugin... */
 	var uuid = 'fabe8224-2341-11e9-8762-74d4351650de'; /* 2019-01-28 Switchboard */

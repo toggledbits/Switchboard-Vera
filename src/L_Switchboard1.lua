@@ -11,11 +11,11 @@ local debugMode = false
 
 local _PLUGIN_ID = 9194 -- luacheck: ignore 211
 local _PLUGIN_NAME = "Switchboard"
-local _PLUGIN_VERSION = "1.9develop-21098"
+local _PLUGIN_VERSION = "1.9develop-21104"
 local _PLUGIN_URL = "https://www.toggledbits.com/"  -- luacheck: ignore 211
 
 local _CONFIGVERSION = 21098
-local _UIVERSION = 20353
+local _UIVERSION = 21104
 
 local MYSID = "urn:toggledbits-com:serviceId:Switchboard1"
 local MYTYPE = "urn:schemas-toggledbits-com:device:Switchboard:1"
@@ -534,6 +534,8 @@ local function startSwitches( dev )
 				luup.devices[switch].description, switch, reset)
 			scheduleTick( { id="impulse"..switch, owner=switch, func=resetSwitch }, reset )
 		end
+
+		setVar( MYSID, "RampRunning", 0, switch )
 	end
 	return #switches
 end
@@ -691,6 +693,7 @@ function actionSetBrightness( level, dev )
 	if level == 0 then -- cover always sets brightness
 		return actionSetState( "0", dev )
 	end
+	local df = dfMap[b] or {}
 
 	setVar( DIMMERSID, "LoadLevelTarget", tostring(level), dev )
 
@@ -705,11 +708,27 @@ function actionSetBrightness( level, dev )
 		setVar( VSSID, "Target", 1, dev )
 		setVar( SWITCHSID, "Status", 1, dev )
 		setVar( VSSID, "Status", 1, dev )
+		if df.timer ~= false then -- missing means true
+			-- Start impulse timer if set.
+			local delay = getVarNumeric( "ImpulseTime", 0, dev, MYSID )
+			if delay > 0 then
+				D("actionSetBrightness() impulse reset in %1 secs", delay)
+				delay = delay + os.time()
+				setVar( MYSID, "ImpulseResetTime", delay, dev )
+				scheduleTick( { id="impulse"..dev, owner=dev, func=resetSwitch }, delay )
+			end
+		end
 	elseif level == 0 and st ~= 0 then
 		setVar( SWITCHSID, "Target", 0, dev )
 		setVar( VSSID, "Target", 0, dev )
 		setVar( SWITCHSID, "Status", 0, dev )
 		setVar( VSSID, "Status", 0, dev )
+		if df.timer ~= false then -- missing means true
+			-- Clear timer task
+			D("actionSetBrightness() clearing impulse task")
+			scheduleTick( "impulse"..dev, 0 )
+			setVar( MYSID, "ImpulseResetTime", "0", dev )
+		end
 	end
 	local force = getVarNumeric( "AlwaysUpdateStatus", 0, dev, MYSID ) ~= 0
 	setVar( DIMMERSID, "LoadLevelStatus", tostring(level), dev, force )
