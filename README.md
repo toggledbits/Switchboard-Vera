@@ -23,9 +23,9 @@ Installation of Switchboard is best done from the AltAppStore. Find it. Click it
 
 ## Creating Virtual Switches/Devices
 
-To create virtual switches, go into the "Switchboard" device control panel, and hit the "Add One" button to create one new virtual switch, or "Add Five" to create them five at a time. Each click requires processing and Luup reload, so do this slowly if you have a large number of switches to create.
+To create virtual switches, go into the "Switchboard" device control panel, select the type of virtual device you want to create (switch, dimmer, etc.), and hit the "Create New Virtual Device" button. Each click requires processing and a Luup reload, so do this slowly if you have a large number of switches to create.
 
-Once the new device has been created and Switchboard reports the number of devices now running, do a hard-refresh of your browser as described in the last install step above.
+**IMPORTANT**: After creating virtual devices, you *must* do a [hard-refresh of your browser](https://www.howtogeek.com/672607/how-to-hard-refresh-your-web-browser-to-bypass-your-cache/) so that the Vera UI picks up and displays the newly-created devices.
 
 **NOTE:** Do not create additional instances of the Switchboard master device. The system should have one and only one Switchboard device. Virtual switches are created only from the Switchboard control panel buttons as described above.
 
