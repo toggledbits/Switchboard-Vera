@@ -1,6 +1,8 @@
 # Switchboard -- Change Log
 
-## Version 1.9 (development, 22203)
+**NOTE:** Version 1.9 and all later versions are not posted to the Vera App Marketplace. Please install from Github directly. OpenLuup users can still use the AltAppStore to install Switchboard.
+
+## Version 1.9 (released, 22203)
 
 * Make dimmer `ImpulseTime` work.
 * For non-integer ramp rates, make sure `LoadLevelStatus` only stores (rounded) integer.
