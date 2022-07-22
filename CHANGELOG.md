@@ -1,10 +1,11 @@
 # Switchboard -- Change Log
 
-## Version 1.9 (development, 21104)
+## Version 1.9 (development, 22203)
 
 * Make dimmer `ImpulseTime` work.
 * For non-integer ramp rates, make sure `LoadLevelStatus` only stores (rounded) integer.
 * Support for ALTUI 2.52
+* Fix docs for creating new virtual devices.
 
 ## Version 1.8 (released, 20179)
 
